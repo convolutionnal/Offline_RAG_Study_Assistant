@@ -1,0 +1,40 @@
+# ============================================================
+# Offline RAG Study Assistant — Python Dependencies
+# ============================================================
+# All libraries run 100% offline after initial install/download.
+# No API keys or cloud services required.
+# ============================================================
+
+# --- PDF Processing ---------------------------------------------------
+# PyMuPDF: High-performance PDF text extraction.
+# Significantly faster and more accurate than PyPDF2 for
+# complex academic layouts, tables, and unicode characters.
+pymupdf>=1.25.0
+
+# LangChain Community: Provides the PyMuPDFLoader wrapper that
+# returns structured Document objects with page-level metadata.
+langchain-community>=0.2.0
+
+# --- Embeddings (Fully Local) -----------------------------------------
+# SentenceTransformers: Loads and runs transformer models locally.
+# We use 'all-MiniLM-L6-v2' (384-dim, 22M params, ~80MB).
+sentence-transformers>=3.0.0
+
+# PyTorch: Required backend for SentenceTransformers inference.
+# CPU-only is sufficient for our embedding dimensions.
+torch>=2.0.0
+
+# --- Vector Database ---------------------------------------------------
+# ChromaDB: Persistent, local vector store with built-in
+# similarity search. No external server process needed.
+chromadb>=0.5.0
+
+# --- NLP Utilities -----------------------------------------------------
+# NLTK: Used exclusively for sentence tokenization in the
+# semantic chunker (punkt_tab tokenizer).
+nltk>=3.8.0
+
+# --- Developer Experience ----------------------------------------------
+# Rich: Beautiful console output — progress bars, tables,
+# syntax highlighting for the pipeline_runner.
+rich>=13.0.0
