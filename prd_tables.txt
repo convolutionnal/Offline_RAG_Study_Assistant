@@ -1,0 +1,100 @@
+=== TABLE 1 ===
+Version | 1.0 — From Scratch | Status | ACTIVE
+Authors | Aravind + 2 teammates | Date | 2025
+Audience | AI Coding Agent / Developer | GitHub | aravind231b156
+
+=== TABLE 2 ===
+Constraint | Requirement
+No Cloud LLM | All inference through Ollama locally (llama3.1:8b default)
+Offline after setup | After initial model + embedding downloads, works with zero internet
+Source-grounded | MCQs must cite retrieved PDF chunks — hallucinated questions are a failure
+MCQ-first output | 4-option MCQ with labeled correct answer + explanation per question
+Strict JSON output | LLM must return schema-valid JSON; retry logic handles malformed responses
+Local hardware | NVIDIA RTX 2050, E:\AI\rag_env (Miniconda), PyTorch 2.5.1+cu121
+
+=== TABLE 3 ===
+Package | Version / Install | Purpose
+pymupdf4llm | pip install pymupdf4llm | PDF → clean Markdown with headings, tables, structure preserved
+pdfplumber | pip install pdfplumber | Fallback PDF parser + precise table extraction from complex PDFs
+langchain-text-splitters | pip install langchain-text-splitters | MarkdownHeaderTextSplitter + RecursiveCharacterTextSplitter for chunking
+sentence-transformers | pip install sentence-transformers | all-mpnet-base-v2 embedding model (cached to E:\huggingface_cache)
+chromadb | pip install chromadb | Local persistent vector database for embedding storage + retrieval
+fastapi | pip install fastapi | REST API backend framework
+uvicorn | pip install uvicorn[standard] | ASGI server to run FastAPI
+python-multipart | pip install python-multipart | Required by FastAPI for file upload handling
+pydantic v2 | pip install pydantic | Request/response schema validation (comes with FastAPI)
+torch (CUDA) | Already installed | PyTorch 2.5.1+cu121 — GPU embedding acceleration on RTX 2050
+spacy (optional) | pip install spacy | Used only if sentence-window fallback chunking is needed
+pytest | pip install pytest | Testing framework for all test files
+httpx | pip install httpx | Async HTTP client for calling Ollama API from backend
+loguru | pip install loguru | Clean structured logging across all modules
+tiktoken | pip install tiktoken | Fast token counting for chunk size validation
+
+=== TABLE 4 ===
+Variable | Value
+HF_HOME | E:\huggingface_cache
+TEMP | E:\tmp
+TMP | E:\tmp
+PYTHONNOUSERSITE | 1   (prevents system site-packages pollution)
+OLLAMA_HOST | http://localhost:11434
+
+=== TABLE 5 ===
+INDEXING PHASE  (run once per PDF) | QUERYING PHASE  (run per quiz request)
+PDF Upload  →  pymupdf4llm (Markdown)  →  Header-based split  →  Recursive token split  →  Token validate  →  Embed (GPU)  →  ChromaDB persist | Topic text  →  Embed query  →  ChromaDB cosine search  →  Top-K chunks  →  Prompt assembly  →  Ollama (llama3.1:8b)  →  JSON parse + validate  →  MCQ response
+
+=== TABLE 6 ===
+Layer | Technology | Why This Specific Choice
+PDF Parsing | pymupdf4llm | Converts PDF to Markdown preserving headings, tables, bold — essential for header-based chunking
+Fallback Parser | pdfplumber | Handles PDFs with complex table layouts where pymupdf4llm loses structure
+Chunking (primary) | MarkdownHeaderTextSplitter | Splits by H1/H2/H3 headers — creates semantically bounded chunks with section metadata
+Chunking (secondary) | RecursiveCharacterTextSplitter | 512-token max with 10% overlap — applied after header split to keep chunks within embedding limit
+Token Counting | tiktoken (cl100k_base) | Accurate token count to validate chunks fit embedding model context window
+Embeddings | all-mpnet-base-v2 | Best general-purpose semantic model; 768-dim; GPU-accelerated via PyTorch; cached to E drive
+Vector Store | ChromaDB | Local persistent vector DB; cosine similarity search; stores chunk text + rich metadata
+LLM Runtime | Ollama + llama3.1:8b | Best balance of quality + speed for local structured JSON generation; mistral:7b as backup
+Backend API | FastAPI + uvicorn | Async Python REST API; Pydantic validation; auto-generates OpenAPI docs at /docs
+Frontend | React + Vite | Fast dev server; component-based UI for upload, controls, MCQ display
+
+=== TABLE 7 ===
+Noise Pattern | Cleaning Action
+Hyphenated line breaks (pro-\ncess) | Rejoin: 'pro-\ncess' → 'process'  (regex: r'(\w+)-\n(\w+)')
+Repeated page numbers (1, 2, 3) | Remove standalone numeric lines with regex r'^\s*\d+\s*$'
+Header/footer boilerplate | Detect lines repeated across >3 pages and strip them
+Unicode artifacts (●, ─, ▪) | Replace decorative unicode with standard ASCII equivalents
+Multiple blank lines | Collapse 3+ consecutive newlines to double newline
+Figure/table captions alone | Keep if followed by content; strip if isolated (e.g. 'Figure 2.1' alone on a line)
+Reference/bibliography sections | Detect '[1] Author...' pattern and optionally skip entire section
+
+=== TABLE 8 ===
+Strategy | What It Does | Why It Matters Here
+Header-aware split (primary) | Splits at H1/H2/H3 boundaries in Markdown output | Academic notes are organized by topic. Each section heading IS a semantic boundary. This is the single biggest quality improvement.
+Recursive token split (secondary) | 512-token max, 50-token overlap, splits on \n\n → \n → . → space | Prevents header sections that are too long from breaking the embedding model context window
+Token validation gate | Drop chunks < 30 tokens, cap at 512 tokens | Eliminates noise fragments and oversized chunks that dilute embeddings
+Section metadata injection | Prepend heading path to each chunk text before embedding | 'Chapter 3 > Process Scheduling > FCFS Algorithm: ...' — makes embeddings dramatically more specific
+
+=== TABLE 9 ===
+Academic PDF Type | Expected Chunks | Strategy Result
+Lecture notes (40-80 pages) | 150–400 chunks | Header-split gives one chunk per topic/subtopic — clean and precise
+Textbook chapters (100+ pages) | 400–1000 chunks | Recursive split handles long prose sections; breadcrumb keeps context
+Slide-exported PDFs | 100–250 chunks | Slide headers become section markers; short bullet content stays intact
+Mixed (text + tables) | Varies | pdfplumber fallback preserves table rows; tables chunked as single units
+
+=== TABLE 10 ===
+# | Acceptance Criterion | Priority | Phase | Status
+1 | Upload any academic PDF and receive doc_id within 90 seconds | P0 | Backend | TODO
+2 | Generate 5 MCQs on a given topic from any indexed PDF | P0 | Backend | TODO
+3 | All MCQ content is traceable to retrieved PDF chunks (source_chunks field populated) | P0 | LLM | TODO
+4 | MCQ JSON validates against schema 100% of time (retries allowed, max 3) | P0 | LLM | TODO
+5 | All chunks are 30–512 tokens (token validation gate passes 100%) | P0 | Chunker | TODO
+6 | System works fully offline after initial model downloads | P0 | Infra | TODO
+7 | Frontend allows upload, topic entry, difficulty select, MCQ display with reveal logic | P1 | Frontend | TODO
+8 | All 3 sample PDFs (os, dbms, cn notes) index successfully | P1 | E2E | TODO
+9 | All pytest tests pass (test_document_pipeline, test_chunking, test_retrieval, test_quiz_generation) | P1 | Tests | TODO
+10 | /health endpoint returns all-green (Ollama, Chroma, embeddings) | P1 | Backend | TODO
+
+=== TABLE 11 ===
+Branch | Purpose + Rules
+main | Protected. Production-ready only. Merge via PR with at least 1 reviewer approval.
+dev | Integration branch. All feature branches merge here first via PR.
+feature/step-N-name | One branch per build step. E.g. feature/step-2-pdf-parsing, feature/step-4-embeddings
+

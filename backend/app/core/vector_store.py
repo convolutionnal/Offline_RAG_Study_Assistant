@@ -61,8 +61,8 @@ class ChromaVectorStore:
         collection_name: str | None = None,
     ) -> None:
         self._engine = embedding_engine
-        self._persist_dir = persist_dir or str(settings.paths.chroma_db_dir)
-        self._collection_name = collection_name or settings.vector_store.collection_name
+        self._persist_dir = persist_dir or str(settings.CHROMA_PATH)
+        self._collection_name = collection_name or "rag_study_chunks"
 
         # ── Initialize ChromaDB client ───────────────────────────────
         import chromadb
@@ -80,7 +80,7 @@ class ChromaVectorStore:
             name=self._collection_name,
             embedding_function=self._embedding_fn,
             metadata={
-                "hnsw:space": settings.vector_store.distance_metric,
+                "hnsw:space": "cosine",
             },
         )
 
@@ -233,7 +233,7 @@ class ChromaVectorStore:
             "collection_name": self._collection_name,
             "total_chunks": count,
             "persist_dir": self._persist_dir,
-            "distance_metric": settings.vector_store.distance_metric,
+            "distance_metric": "cosine",
             "embedding_model": self._engine.model_name,
             "embedding_dimension": self._engine.dimension,
         }
@@ -265,7 +265,7 @@ class ChromaVectorStore:
             name=self._collection_name,
             embedding_function=self._embedding_fn,
             metadata={
-                "hnsw:space": settings.vector_store.distance_metric,
+                "hnsw:space": "cosine",
             },
         )
 

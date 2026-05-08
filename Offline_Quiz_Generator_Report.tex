@@ -1,0 +1,1434 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=1in}
+\begin{document}
+
+﻿Offline Quiz Generator
+A PROJECT REPORT
+Submitted by:
+K.S.Aravind(231B156)
+Kush Sharma(231B176)
+Kushagra Pandey(231B180)
+Under the guidance of: Dr. Rahul Pachauri
+
+
+MAY - 2026
+Submitted in partial fulfilment for the award of the Degree of
+BACHELOR OF TECHNOLOGY
+IN
+COMPUTER SCIENCE \& ENGINEERING
+Department of Computer Science \& Engineering
+JAYPEE UNIVERSITY OF ENGINEERING \& TECHNOLOGY,
+A-B ROAD, RAGHOGARH, DT. GUNA - 473226, M.P., INDIA
+
+
+
+
+\chapter*{Declaration by the Student}
+\addcontentsline{toc}{chapter}{Declaration by the Student}
+
+
+I hereby declare that the work reported in the B.Tech. 6th Semester Project entitled as "OFFLINE QUIZ GENERATOR", in partial fulfillment for the award of degree of B.Tech submitted at Jaypee University of Engineering and Technology, Guna, as per best of my knowledge and belief there is no infringement of intellectual property right and copyright. In case of any violation I will solely be responsible.
+
+
+
+
+
+
+K.S.ARAVIND (231B156)
+KUSH SHARMA (231B176)
+KUSHAGRA PANDEY (231B180)
+
+
+
+Department of Computer Science and Engineering
+Jaypee University of Engineering and Technology
+Guna, M.P., India
+Date: 4th May, 2026
+
+
+
+
+
+
+\chapter*{CERTIFICATE}
+\addcontentsline{toc}{chapter}{CERTIFICATE}
+This is to certify that the work titled "OFFLINE QUIZ GENERATOR" submitted by "K.S.Aravind , Kush Sharma, and Kushagra Pandey" in partial fulfillment for the award of degree of B.Tech of Jaypee University of Engineering \& Technology, Guna has been carried out under my supervision. As per best of my knowledge and belief there is no infringement of intellectual property right and copyright. Also, this work has not been submitted partially or wholly to any other University or Institute for the award of this or any other degree or diploma. In case of any violation concern, students will solely be responsible.
+
+
+
+
+Sign of Supervisor
+Rahul Pachauri
+Associate Professor
+Date: 02/05/2026
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+We would like to extend our heartfelt gratitude to all those who contributed to the successful completion of this Offline RAG-Powered Quiz Generator project.
+Firstly, we thank Jaypee University of Engineering \& Technology for providing the opportunity, infrastructure, and resources necessary to carry out this project.
+Special thanks go to our supervisor, Dr. Rahul Pachauri, whose guidance, technical expertise, and continuous encouragement were instrumental in shaping the architecture, methodology, and direction of this project.
+We are grateful to our team members for their dedication, collaboration, and mutual support throughout the development process. Each contribution played a meaningful role in bringing this system to life.
+Finally, we acknowledge the open-source community behind tools such as Ollama, ChromaDB, FastAPI, React, and the Hugging Face ecosystem, whose freely available work made this locally-run AI system possible.
+
+
+Thank you all for your support and encouragement.
+
+
+
+
+K.S.ARAVIND (231B156)
+KUSH SHARMA (231B176)
+KUSHAGRA PANDEY (231B180)
+Date: 4th May, 2026
+
+
+
+
+
+
+
+
+
+
+\chapter*{ABSTRACT}
+\addcontentsline{toc}{chapter}{ABSTRACT}
+The Offline RAG-Powered Quiz Generator is an end-to-end, privacy-preserving academic tool that automatically generates Multiple Choice Questions (MCQs) from any academic PDF document without requiring internet connectivity or paid cloud APIs. The system implements a Retrieval-Augmented Generation (RAG) pipeline comprising five stages: PDF parsing using pymupdf4llm to produce structured Markdown, semantic chunking with a hybrid Header-aware and Recursive Token splitting strategy, GPU-accelerated embedding using the all-mpnet-base-v2 model on a local NVIDIA GPU, persistent vector storage and cosine similarity retrieval using ChromaDB, and MCQ generation using the locally-running llama3.1:8b language model via Ollama. A FastAPI backend exposes REST endpoints for document upload and quiz generation, while a React-based frontend provides an intuitive interface for file upload, topic input, difficulty selection, and interactive MCQ display. The system produces schema-validated JSON output with automatic retry logic to ensure reliability. Evaluations on academic documents from Operating Systems, Database Management Systems, and Computer Networks domains demonstrate accurate, source-grounded question generation with full offline operation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\chapter*{LIST OF FIGURES}
+\addcontentsline{toc}{chapter}{LIST OF FIGURES}
+
+
+Figure 1.1: comparison of different LLM approaches
+Figure 2.1: plane vanilla structure of RAG pipeline from Lewis P, Perez E, Piktus A, Petroni     F,       Karpukhin V, Goyal N, Küttler H, Lewis M, Yih Wt, Rocktäschel T, Riedel S, Kiela D (2020) Retrieval-augmented generation for knowledge-intensive NLP tasks. 15
+Figure 3.1 Overall System Architecture of Gradient Weekly 21
+figure 3.2:Indexing Pipeline.
+Figure 3.3: Querying Pipeline
+Figure 3.4: Frontend Flow
+Figure 3.5: Sequence Diagram of the rag pipeline.
+Figure 4.1:Acrhitectural diagram of the mpv2net model
+Figure:4.2: Effect of Similarity Threshold.
+Figure 5.1:simplified architecture  of the llama 3.1 model.
+
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+
+\chapter*{LIST OF TABLES}
+\addcontentsline{toc}{chapter}{LIST OF TABLES}
+
+
+Table 2.1  comparison of existing systems.
+Table 3.1: High-Level System Architecture
+Table 3.2: Hybrid Chunking Techniques and Their Purpose
+Table 3.3: Backend Modules and Their Functions
+Table 3.4: API Endpoints and Their Descriptions
+Table 3.5: System Architecture Layers and Components
+Table 3.6: System Components and Technologies Used
+Table 3.7:Functional Requirements
+Table 3.8: Non-Functional Requirements
+Table 3.9: Design Justification of the RAG-Based Approach
+Table 3.10: Evaluation of Parsing Tools
+Table 3.11: System Architecture Layers and Components
+Table 4.1  Tools and Technologies Used
+Table 4.2  Table 4.2:Test Suite Execution Results
+Table 5.1:Sample MCQ Generated by the System
+Table 5.2: Performance Metrics of the System Across Pipeline Stages
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\tableofcontents
+\newpage
+\chapter{Introduction}
+\section{Background of the Study}
+The rapid growth of digital education has led to an explosion of academic content distributed as PDF documents — lecture notes, textbook chapters, and course slides. Students preparing for examinations must process large volumes of such material, and self-testing through quiz practice is one of the most effective learning strategies known to cognitive science. However, manually creating quiz questions from dense academic text is time-consuming, inconsistent in quality, and often neglected by students under time pressure.
+Artificial intelligence, particularly Large Language Models (LLMs) and Retrieval-Augmented Generation (RAG), has demonstrated remarkable capability in understanding and reasoning over textual content. Contemporary AI quiz generation tools exist but universally depend on cloud-based APIs such as OpenAI GPT or Google Gemini, which introduce recurring costs, require stable internet connectivity, and raise significant data privacy concerns when sensitive academic materials are uploaded to third-party servers.
+Local LLM inference has become increasingly viable with tools like Ollama, which enable quantized large language models to run on consumer-grade hardware. Combined with local embedding models and vector databases, it is now possible to construct a fully offline, privacy-preserving RAG pipeline that rivals cloud-based systems in quality while eliminating their associated costs and connectivity requirements.
+
+
+Figure 1.1: comparison of different LLM approaches.
+\section{Problem Statement}
+Students at educational institutions handle large volumes of academic PDF documents and have limited time to create practice questions manually. Existing AI quiz generation tools present three critical barriers. First, they require paid API subscriptions, making them inaccessible for budget-constrained students. Second, they depend on continuous internet connectivity, preventing offline use during travel or power outages. Third, uploading academic documents to cloud services raises concerns about intellectual property and data privacy.
+Additionally, naive approaches to document question generation — such as feeding entire PDFs directly to an LLM — produce hallucinated or contextually incorrect questions because models operate beyond their context window limits. A principled retrieval-based approach is needed to ensure that generated questions are grounded in the actual source material.
+\section{Objectives}
+The main objectives of this project are:
+\begin{itemize}
+\item To build a fully offline quiz generation system that operates without internet connectivity after initial model downloads.
+\item To implement a robust PDF parsing and chunking pipeline that preserves the semantic structure of academic documents.
+\item To use GPU-accelerated local embedding models for high-quality semantic retrieval from large document collections.
+\item To integrate a locally-running LLM via Ollama to generate grounded, schema-validated Multiple Choice Questions.
+\item To expose the pipeline as a REST API via FastAPI and provide a user-friendly React frontend for seamless student interaction.
+\item To ensure MCQ output is strictly validated against a JSON schema with automatic retry logic for reliability.
+\end{itemize}
+\section{Scope of the Project}
+The project covers the complete design, implementation, and testing of a local RAG-based quiz generation system for academic use. The system accepts any PDF document containing text-layer content and produces MCQs grounded in that document's content.
+Practical applications include exam preparation for university courses, self-assessment tools for individual students, and offline educational environments in institutions with limited internet access. The system is particularly well-suited for subjects with dense theoretical content such as Operating Systems, Database Management Systems, Computer Networks, and similar engineering disciplines.
+The current implementation focuses on MCQ generation from text-based PDFs. Scanned or image-only PDFs requiring OCR, cloud-based inference, and multi-user authentication are outside the scope of this version and are identified as areas for future work.
+\section{Organization of the Report}
+Chapter 1: Introduction — Provides the background, problem statement, objectives, and scope of the project.
+Chapter 2: Literature Review — Reviews existing quiz generation systems, RAG techniques, and local LLM tools.
+Chapter 3: System Analysis and Design — Describes the system architecture, pipeline design methodology, and data flow.
+Chapter 4: Implementation and Testing — Details tools used, implementation of each pipeline stage, and testing methodology.
+Chapter 5: Results and Discussion — Presents performance results and comparative analysis.
+Chapter 6: Conclusion and Future Work — Summarizes achievements and proposes future enhancements.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\chapter{Literature Review / Background Work}
+\section{Existing Systems / Work}
+The problem of automatic question generation from text has been studied for several decades, evolving from template-based rule systems to modern neural approaches.
+1. Template-Based Question Generation
+Early systems used syntactic parsing and hand-crafted templates to transform declarative sentences into questions. Systems like AUTOQUEST [1] applied transformation rules to sentences. While reliable for simple factual questions, these systems could not handle the semantic complexity of academic text, produced repetitive question structures, and required extensive manual rule engineering for each domain.
+2. Seq2Seq and Transformer-Based Generation
+With the advent of sequence-to-sequence models, neural question generation became possible. Models fine-tuned on the SQuAD dataset [2] demonstrated the ability to generate questions from passage-answer pairs. The introduction of BERT and GPT-based models further improved fluency and semantic coherence. However, these models still required cloud infrastructure for inference and did not address the retrieval problem — the question of which passage to generate from given a large document.
+3. Retrieval-Augmented Generation (RAG)
+Lewis et al. [3] introduced the RAG framework, which combines a dense retrieval component with a generative language model. The retrieval step selects relevant document chunks based on semantic similarity to a query, and the generation step produces answers grounded in those chunks. This architecture directly addresses the hallucination problem in question generation by constraining the LLM to work only with retrieved, relevant context. RAG-based systems have since become the dominant paradigm for document-grounded AI applications.
+4. Local LLM Inference with Ollama
+Ollama [4] is an open-source tool that enables quantized LLMs to run on consumer hardware without cloud dependency. Models such as Llama 3.1 (Meta AI) and Mistral are available in 4-bit quantized form, requiring as little as 4 GB of VRAM. This makes high-quality LLM inference feasible on student-grade GPU hardware, a significant enabler for offline AI applications.
+5. Existing Quiz Generation Tools
+Commercial tools such as Quizgecko, Quillionz, and PrepAI generate MCQs from uploaded documents. These tools use cloud LLM APIs, require subscriptions, and upload user documents to remote servers. QuizBot and Formative also provide AI-assisted quiz creation integrated into learning management systems. None of these tools operate offline, and all involve third-party data handling. Academic prototypes such as EduQuiz [5] demonstrated GPT-based quiz generation but similarly relied on OpenAI APIs.
+
+
+
+
+Figure 2.1: plane vanilla structure of RAG pipeline from Lewis P, Perez E, Piktus A,   PetroniF, Karpukhin V, Goyal N, Küttler H, Lewis M, Yih Wt, Rocktäschel T, Riedel S, Kiela D (2020) Retrieval-augmented generation for knowledge-intensive NLP tasks.
+\section{Limitations of Existing Work}
+Despite progress, existing systems suffer from several important limitations:
+\begin{itemize}
+\item Cloud dependency: all commercial tools require internet connectivity and expose user documents to third-party servers.
+\item Cost barriers: API-based systems charge per query, making frequent use expensive for students.
+\item Context window limitations: feeding large PDFs directly to LLMs without retrieval causes context overflow and hallucination.
+\item Poor chunking strategies: naive fixed-size chunking ignores semantic and structural boundaries in academic text, producing incoherent retrieval results.
+\item Lack of schema enforcement: most systems do not validate LLM output structure, leading to inconsistent question formats that are difficult to render programmatically.
+\item No GPU acceleration: existing local prototypes typically run embedding models on CPU, making indexing prohibitively slow for document collections.
+\end{itemize}
+\section{Needs for Proposed System}
+The analysis of limitations in existing work establishes clear requirements for the proposed system:
+\begin{itemize}
+\item Full offline operation after initial model downloads, with no cloud dependency.
+\item A principled chunking strategy that respects the semantic structure of academic PDFs using header-aware splitting.
+\item GPU-accelerated embedding for practical indexing speed on consumer hardware.
+\item Strict JSON schema validation with automatic retry logic to ensure reliable MCQ output.
+\item An intuitive web interface that makes the system accessible to non-technical students without command-line expertise.
+\item Zero recurring cost, using only open-source models and libraries.
+\end{itemize}
+
+
+
+
+Feature / System
+Template-Based Systems
+Seq2Seq / Transformer Models
+Cloud Quiz Tools (Quizgecko, etc.)
+Academic Prototypes (EduQuiz)
+Proposed System (Offline RAG Quiz Generator)
+AI-based Generation
+No
+Yes
+Yes
+Yes
+Yes
+Retrieval Mechanism (RAG)
+No
+No
+Partial
+No
+Yes
+Offline Capability
+Yes
+No
+No
+No
+Yes
+Cloud Dependency
+No
+Yes
+Yes
+Yes
+No
+Cost (API usage)
+Free
+High
+High
+High
+Free
+Data Privacy
+High
+Low
+Low
+Low
+High
+Handling Large Documents
+Poor
+Poor
+Moderate
+Poor
+Excellent
+Hallucination Control
+Low
+Low
+Medium
+Low
+High
+Chunking Strategy
+None
+None
+Basic
+Basic
+Advanced (Header + Token-based)
+Schema Validation (Structured Output)
+No
+No
+No
+No
+Yes
+GPU Acceleration
+No
+No
+No
+No
+Yes
+User Interface
+No
+Limited
+Yes
+Limited
+Yes
+Accuracy of MCQs
+Low
+Medium
+Medium
+Medium
+High
+Table2.1: Comparison of Existing Quiz Generation Systems
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\chapter{System Analysis and Design}
+\section{System Architecture}
+The Offline RAG-Powered Quiz Generator is structured as a two-phase pipeline: an Indexing Phase that processes uploaded PDFs into a searchable vector database, and a Querying Phase that retrieves relevant content and generates MCQs on demand.
+The Indexing Phase processes each uploaded PDF through five sequential stages: document parsing with pymupdf4llm to produce structured Markdown; text cleaning to remove noise such as page numbers, headers, and hyphenated line breaks; hybrid chunking that first splits on Markdown section headers and then applies recursive token-bounded splitting; GPU-accelerated embedding using all-mpnet-base-v2; and persistence into a ChromaDB vector store with a unique collection per document.
+The Querying Phase operates at request time: the user's topic query is embedded using the same model; ChromaDB performs cosine similarity search to retrieve the top-8 most relevant chunks; these chunks are assembled into a structured prompt; the prompt is sent to llama3.1:8b via the Ollama HTTP API; the JSON response is parsed, validated against the MCQ schema, and returned to the frontend.The Offline RAG-Powered Quiz Generator is designed as a modular, scalable, and fully offline system that follows a two-phase pipeline architecture:
+1. Indexing Phase (Offline Processing Phase)
+2. Querying Phase (Runtime Generation Phase)
+\subsection{High-Level Architecture Overview}
+Layer
+Description
+Presentation Layer
+React-based frontend for user interaction
+Application Layer
+FastAPI backend handling requests and orchestration
+Data \& AI Layer
+RAG pipeline (embedding, retrieval, LLM generation)
+Table  3.1: High-Level System Architecture
+This separation ensures that computationally intensive tasks such as document parsing and embedding are performed only once, while query-time operations remain fast and efficient.
+
+
+figure 3.1:Overall System Architecture.
+
+
+\subsection{Indexing Phase}
+The Indexing Phase is responsible for converting uploaded PDF documents into a structured and searchable format. This phase is executed once per document and significantly improves the efficiency of later query operations. The pipeline consists of the following stages:
+1. Document Parsing
+The uploaded PDF is processed using pymupdf4llm, which converts each page into structured Markdown format. Unlike traditional text extraction methods, this approach preserves:
+\begin{itemize}
+\item Section headings
+\item Subheadings
+\item Tables
+\item Formatting elements
+\end{itemize}
+This structured output forms the foundation for effective semantic chunking.
+2. Text Cleaning
+The extracted text is passed through a cleaning pipeline implemented in text\_cleaner.py. The purpose of this stage is to remove noise and improve text quality. Key operations include:
+\begin{itemize}
+\item Rejoining hyphenated words across line breaks
+\item Removing standalone page numbers
+\item Eliminating repeated headers and footers
+\item Normalizing whitespace and formatting
+\end{itemize}
+Additionally, pages with fewer than a threshold number of tokens (e.g., 40 tokens) are filtered out to avoid indexing irrelevant content.
+3. Hybrid Chunking Strategy
+The cleaned text is divided into meaningful segments using a hybrid chunking approach, which combines:
+Technique
+Purpose
+Header-based splitting
+Preserves semantic structure
+Recursive token splitting
+Ensures chunk size within model limits
+Table 3.2: Hybrid Chunking Techniques and Their Purpose
+
+
+The system first uses MarkdownHeaderTextSplitter to divide text based on section headings. If a chunk exceeds the token limit (e.g., 512 tokens), it is further subdivided using RecursiveCharacterTextSplitter. To improve retrieval accuracy, breadcrumb metadata is injected into each chunk, representing its hierarchical position in the document.
+
+
+4. Embedding Generation
+Each chunk is converted into a dense vector representation using the all-mpnet-base-v2 embedding model from the sentence-transformers library. Key features:
+\begin{itemize}
+\item 768-dimensional embeddings
+\item GPU acceleration using CUDA
+\item Batch processing for efficiency
+\end{itemize}
+The embedding model is implemented as a singleton to avoid repeated loading overhead.
+5. Vector Storage
+The generated embeddings are stored in ChromaDB, a local vector database. Each document is assigned a unique collection identified by a doc\_id. Stored data includes:
+\begin{itemize}
+\item Chunk text
+\item Embedding vectors
+\item Metadata (page number, section, source)
+\end{itemize}
+This enables efficient semantic search during the querying phase.
+
+
+figure 3.2:Indexing Pipeline.
+\subsection{Querying Phase}
+The Querying Phase is executed at runtime when the user requests quiz generation. It retrieves relevant information and generates MCQs using a local LLM.
+1. Query Embedding
+The user-provided topic is converted into a vector using the same embedding model to ensure consistency between document and query representations.
+2. Semantic Retrieval
+The system performs a cosine similarity search in ChromaDB to retrieve the top-K (typically 5–8) most relevant chunks. This ensures:
+\begin{itemize}
+\item Context relevance
+\item Reduced hallucination
+\item Efficient filtering of large documents
+\end{itemize}
+3. Prompt Construction
+The retrieved chunks are combined into a structured prompt. The prompt includes:
+\begin{itemize}
+\item Context from retrieved chunks
+\item User topic
+\item Difficulty level
+\item Number of questions
+\end{itemize}
+This structured approach ensures that the LLM generates context-aware questions.
+4. LLM-Based Generation
+The prompt is passed to the llama3.1:8b model via Ollama, which runs locally. Advantages:
+\begin{itemize}
+\item No internet dependency
+\item No API cost
+\item Full data privacy
+\end{itemize}
+5. Output Parsing and Validation
+The raw LLM output is:
+\begin{itemize}
+\item Parsed into JSON format
+\item Validated against a predefined schema
+\end{itemize}
+Each MCQ must include:
+\begin{itemize}
+\item Question
+\item Four options
+\item Correct answer
+\item Explanation
+\end{itemize}
+If validation fails, the system retries generation up to a fixed number of attempts.
+
+
+Figure 3.3: Querying Pipeline
+
+
+\subsection{Backend Architecture}
+The backend is implemented using FastAPI, which provides:
+\begin{itemize}
+\item High-performance asynchronous APIs
+\item Automatic validation using Pydantic
+\item Built-in documentation
+\end{itemize}
+Backend Modules
+Module
+Function
+routes\_upload.py
+Handles PDF upload and indexing
+routes\_quiz.py
+Handles quiz generation requests
+routes\_health.py
+System health monitoring
+retriever.py
+Semantic search
+quiz\_generator.py
+Core orchestration
+Table 3.3: Backend Modules and Their Functions
+API Endpoints
+Endpoint
+Description
+/upload
+Upload and index PDF
+/quiz
+Generate MCQs
+/health
+System status
+Table 3.4: API Endpoints and Their Descriptions
+\subsection{Frontend Architecture}
+The frontend is built using React + Vite, providing a lightweight and responsive user interface.
+Key Components
+Component
+Function
+FileUpload
+Upload PDF documents
+QuizControls
+Input topic, difficulty, number of questions
+MCQCard
+Display questions and answers
+QuizCard
+Manage quiz session
+LoadingState
+Show progress during generation
+Table 3.5: Frontend Components and Their Functions
+User Flow
+1. Upload PDF
+2. Enter topic and parameters
+3. Generate quiz
+4. View and interact with MCQs
+
+
+
+
+Figure 3.4: Frontend Flow
+
+
+\subsection{System Design Summary}
+The system integrates multiple technologies into a cohesive architecture:
+Component
+Technology Used
+PDF Parsing
+pymupdf4llm
+Chunking
+LangChain Splitters
+Embeddings
+Sentence Transformers
+Vector DB
+ChromaDB
+LLM
+Ollama (Llama 3.1)
+Backend
+FastAPI
+Frontend
+React
+Table 3.6: System Components and Technologies Used
+\section{Design Methodology}
+The system was designed following an application-based software development methodology, iterating through requirement analysis, architecture design, component implementation, integration testing, and refinement.
+The design of the Offline RAG-Powered Quiz Generator follows a structured and modular methodology, aimed at ensuring efficiency, scalability, and reliability. The system is developed based on the principles of Retrieval-Augmented Generation (RAG) and modern Natural Language Processing (NLP) pipelines, while also considering the constraints of offline execution on consumer-grade hardware. The development process was carried out through the following stages: 1. Requirement Analysis 2. System Architecture Design 3. Component-Level Design 4. Implementation and Integration 5. Testing and Performance Optimization Each stage contributed to refining the system to meet both functional and non-functional requirements.
+\subsection{Requirement Analysis}
+The requirement analysis phase focused on identifying the shortcomings of existing quiz generation systems and defining the necessary features for the proposed solution.
+Functional Requirements
+Requirement
+Description
+PDF Input
+The system must accept academic PDF documents as input
+Quiz Generation
+The system must generate Multiple Choice Questions from document content
+Topic-Based Querying
+The system should allow users to specify topics for quiz generation
+Structured Output
+The system must produce well-defined JSON output for each MCQ
+Table 3.7:Functional Requirements
+Non-Functional Requirements
+Requirement
+Description
+Offline Operation
+The system must function without internet connectivity after initial setup
+Performance
+The system should ensure efficient indexing and fast query response
+Scalability
+The system should handle large documents efficiently
+Reliability
+Output must be validated to ensure correctness and consistency
+Data Privacy
+All processing must occur locally without external data transmission
+Table 3.8: Non-Functional Requirements
+These requirements guided the selection of technologies and design strategies used in the system.
+\subsection{RAG-Based Design Approach}
+The system is fundamentally based on the Retrieval-Augmented Generation (RAG) framework. Traditional approaches that directly use Large Language Models for question generation suffer from limitations such as hallucination, lack of grounding, and context window constraints. To address these issues, the system adopts a two-stage design:
+3. Retrieval Stage: Relevant document segments are identified using semantic similarity.
+4. Generation Stage: The retrieved content is used as context for generating questions using a language model.
+This approach ensures that the generated questions are grounded in the source material, improving both accuracy and reliability.
+Design Justification
+Challenge
+Solution
+Hallucination in LLMs
+Use retrieved document context
+Large document size
+Apply chunking and retrieval mechanisms
+Context window limitations
+Use top-K relevant chunks instead of entire document
+Accuracy of output
+Ground generation in retrieved content
+Table 3.9: Design Justification of the RAG-Based Approach
+\subsection{PDF Parsing Strategy}
+The selection of an optimal PDF parsing methodology is paramount, as the fidelity of the extracted textual data serves as the foundation for all subsequent downstream pipeline components.
+Tool
+Limitation / Capability
+Basic PyMuPDF
+Fails to preserve intrinsic document structural hierarchy
+pdfplumber
+Effective for tabular data but lacks semantic structural awareness
+pymupdf4llm
+Maintains headings, rich formatting, and complex tables
+Table 3.10: Evaluation of Parsing Tools
+Selected Approach
+The architecture implements pymupdf4llm to transform PDF documents into structured Markdown. This strategy ensures the preservation of critical semantic markers, such as headings and tables, which significantly enhances the efficacy of the subsequent chunking process.
+\subsection{Hybrid Chunking Strategy}
+Semantic chunking is a pivotal stage in the RAG pipeline, governing how document content is partitioned for optimized embedding and retrieval.
+Limitations of Naive Chunking
+\begin{itemize}
+\item Fixed-window segmentation frequently disrupts semantic boundaries
+\item Degrades downstream retrieval precision and relevance
+\item Results in fragmented and incoherent context for LLM generation
+\end{itemize}
+To mitigate these deficiencies, a hybrid chunking strategy is employed. The system first segments the document according to structural Markdown headers, ensuring each unit represents a logically coherent section. If a segment exceeds the token threshold for the embedding model, a secondary recursive token-based split is applied. Furthermore, each chunk is enriched with hierarchical breadcrumb metadata, facilitating superior semantic alignment and enhanced retrieval accuracy.
+\subsection{Embedding Model Selection}
+The architecture requires a sophisticated mechanism to transform text into dense numerical vectors that encapsulate semantic depth. Consequently, a transformer-based embedding model was selected for its ability to generate high-fidelity sentence-level representations while leveraging GPU acceleration for throughput. These normalized embeddings are persisted in a local vector store, enabling high-performance similarity searches at query time.
+\subsection{Vector Database Design}
+For the efficient storage and retrieval of high-dimensional vectors, the system incorporates a local vector database that facilitates persistent storage and optimized similarity operations. This design choice ensures that document embeddings are computed only once and remain reusable across multiple sessions. The implementation of cosine similarity enables the precise retrieval of relevant context based on user-defined queries.
+\subsection{Language Model Selection}
+The generative component utilizes a locally deployed Large Language Model, ensuring the system maintains strict offline operation and zero external dependency. The selected model offers an optimized trade-off between reasoning capability and hardware resource consumption, making it ideal for consumer-grade environments. Its support for instruction-based prompting is vital for the reliable generation of structured JSON-validated MCQ sets.
+\subsection{Prompt Design and Validation}
+The system employs structured prompts to guide the LLM toward generating accurate, source-grounded questions. Each prompt synthesizes retrieved context, user topics, and difficulty parameters. To guarantee programmatic consistency, the output must strictly adhere to a predefined JSON schema. A robust validation layer inspects each response, triggering automatic retries upon failure to ensure only verified content is delivered to the user.
+\subsection{Backend Design}
+The backend infrastructure is built upon an asynchronous web framework designed for high-performance request handling and orchestration. It manages the entire lifecycle of document processing, context retrieval, and generation. Through a suite of RESTful endpoints, the backend coordinates file uploads and quiz requests while enforcing rigorous input validation and error-handling protocols.
+\subsection{Frontend Design}
+The presentation layer features a streamlined, intuitive interface that enables seamless interaction with the RAG pipeline. Users can effortlessly upload academic materials, configure quiz parameters, and engage with the generated MCQ sets. The design strategy prioritizes responsiveness and accessibility, ensuring a frictionless user experience across diverse hardware environments.
+\subsection{Summary}
+The adopted design methodology synthesizes diverse technological components into a unified system that satisfies the core requirements of offline functionality, privacy, and academic rigor. By integrating structured document parsing with retrieval-augmented generation, the architecture delivers a reliable, context-aware tool for automated quiz generation across two primary phases: Indexing and Querying.
+\subsection{Data Flow — Indexing Phase}
+The Indexing Phase is dedicated to transforming raw PDF documents into a structured, searchable semantic index. This one-time process converts unstructured text into dense 768-dimensional vector embeddings, facilitating high-performance retrieval during the querying cycle.
+The workflow commences when a user uploads a PDF via the React frontend. The file is transmitted to the FastAPI backend through the /upload endpoint, where it is routed through the document\_loader.py module for parsing into Markdown. Following this, text\_cleaner.py applies regex-driven sanitization to eliminate headers, footers, and noise.
+The chunker.py module subsequently segments the sanitized text into semantically distinct units, which are transformed into embeddings by a GPU-accelerated model. Finally, the vector\_store.py module persists these vectors in ChromaDB, returning a unique doc\_id to the client to enable future quiz generation tasks.
+\subsection{Data Flow — Querying Phase}
+The Querying Phase operates in real time, leveraging the precomputed vector index to generate grounded MCQs. This phase is optimized for computational efficiency, ensuring minimal latency between topic submission and quiz delivery.
+Upon receiving a generation request via the /quiz endpoint, the retriever.py module embeds the user query and identifies relevant document segments through cosine similarity search. These chunks are then ingested by the quiz\_generator.py orchestrator to form a contextually grounded prompt.
+The prompt is dispatched to the local LLM via the ollama\_client.py interface. The resulting raw output is parsed by output\_parser.py and rigorously validated against the required schema by validators.py. Once verified, the complete quiz set is transmitted to the frontend for interactive display.
+\subsection{System Architecture Overview}
+The architecture adopts a modular, layered design to promote maintainability and separation of concerns. This structured approach allows each component—from user interaction to high-performance AI inference—to operate independently within a cohesive local ecosystem.
+
+
+
+
+
+Layer
+Components
+Presentation
+React + Vite frontend: FileUpload, QuizControls, MCQCard, QuizCard, LoadingState
+API
+FastAPI: routes\_upload, routes\_quiz, routes\_health + Pydantic validation models
+Orchestration
+quiz\_generator.py: retrieval → prompt → LLM → parse → validate → retry
+Retrieval
+retriever.py + vector\_store.py (ChromaDB, cosine similarity)
+Indexing
+document\_loader → text\_cleaner → chunker → embeddings (GPU)
+Inference
+Ollama (llama3.1:8b, 4-bit quantized, localhost:11434)
+Table 3.11: System Architecture Layers and Components
+\subsection{Sequence of Interaction}
+The orchestration of system components during the quiz generation lifecycle adheres to a rigorous sequential workflow. The React-based frontend initiates a generation request to the FastAPI backend, which subsequently coordinates the semantic retrieval, local LLM generation, and schema validation phases to deliver the final validated output.
+
+
+Figure 3.5: Sequence Diagram of the rag pipeline.
+\subsection{Design Observations}
+The architectural framework and resultant data flow exhibit several critical technical characteristics:
+\begin{itemize}
+\item The decoupling of the indexing and querying phases significantly mitigates computational latency during real-time execution.
+\item Implementation of a local vector database facilitates high-performance semantic retrieval across extensive document collections.
+\item The modular system architecture ensures that discrete components can be independently optimized or refined without disrupting the overall pipeline.
+\item Integration of rigorous validation protocols enhances the structural consistency and reliability of the generated MCQ outputs.
+\end{itemize}
+In summary, the system achieves an optimized equilibrium between computational performance, source-grounded accuracy, and academic utility through its principled design.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\chapter{Implementation and Testing}
+\section{Tools and Technologies Used}
+The architectural realization of the Offline RAG-Powered Quiz Generator necessitated the strategic integration of a diverse suite of tools and technologies across the various logical layers of the system. The selection criteria for these components prioritized seamless compatibility with full offline execution, computational performance efficiency, and robust interoperability within a localized ecosystem.
+The system's logic tier is architected using the Python programming language, leveraging its extensive ecosystem for high-performance machine learning and natural language processing operations. Complementing this, the presentation tier is engineered with modern web technologies to deliver an intuitive and responsive user experience.
+The primary technological stack and their respective functional roles within the system architecture are summarized in the following table.
+
+
+
+
+Tool / Library
+Purpose
+Python 3.12
+Primary programming language for all backend components
+pymupdf4llm
+PDF to structured Markdown conversion with heading and table preservation
+pdfplumber
+Fallback PDF parser for table-heavy pages
+langchain-text-splitters
+MarkdownHeaderTextSplitter and RecursiveCharacterTextSplitter for hybrid chunking
+tiktoken
+Accurate token counting for chunk size validation (cl100k\_base encoding)
+sentence-transformers
+all-mpnet-base-v2 embedding model (768-dimensional, GPU-accelerated)
+PyTorch 2.5.1+cu121
+Deep learning framework enabling CUDA GPU acceleration on RTX 2050
+ChromaDB
+Local persistent vector database for embedding storage and cosine similarity search
+Ollama
+Local LLM runtime serving llama3.1:8b on localhost:11434
+FastAPI + uvicorn
+Async REST API framework with automatic OpenAPI documentation
+httpx
+Async HTTP client for Ollama API communication
+loguru
+Structured logging across all backend modules
+React + Vite
+Frontend framework and build tool for the user interface
+axios
+HTTP client for frontend-to-backend API communication
+pytest
+Testing framework for unit and integration tests
+Table 4.1:Tools and Technologies Used
+The strategic integration of these technologies ensures the system maintains full functional autonomy without reliance on external cloud services, while simultaneously upholding high standards of computational efficiency and architectural scalability.
+
+
+\section{Implementation Methodology}
+The system was realized through a modular and incremental development lifecycle. Each discrete stage of the RAG pipeline was engineered and validated independently prior to its integration into the holistic ecosystem, an approach that ensured operational reliability and facilitated simplified debugging protocols.
+The comprehensive implementation is partitioned into five primary technical stages.
+
+
+\subsection{Stage 1: Structured PDF Parsing}
+The initial stage necessitates the transformation of input PDF materials into a structured textual representation. The architecture utilizes the pymupdf4llm library to extract document content as Markdown, thereby preserving essential structural markers such as section headings and complex tables.
+Each document page is processed as a discrete unit, yielding a structured dictionary comprising the extracted textual data and its associated semantic metadata.
+To enhance data fidelity, a rigorous filtering protocol is enforced; pages exhibiting insufficient token density or low alphabetic content are discarded. This mechanism effectively purges irrelevant noise, including title pages, indices, and segments dominated by graphical figures.
+In instances where the primary parser encounters difficulty with tabular interpretations, the system employs pdfplumber as a fallback, ensuring high-accuracy extraction for table-heavy content.
+\subsection{Stage 2: Text Cleaning}
+The extracted text is often noisy and requires preprocessing before further use. The text cleaning module applies a sequence of transformations to improve text consistency.
+Key operations include:
+\begin{itemize}
+\item Rejoining hyphenated words split across lines
+\item Removing standalone numeric lines representing page numbers
+\item Eliminating repeated headers and footers
+\item Normalizing special characters
+\item Reducing excessive whitespace
+\end{itemize}
+These steps ensure that the text is suitable for chunking and embedding, thereby improving downstream performance.
+
+
+\subsection{Stage 3: Hybrid Chunking}
+The cleaned text is divided into smaller segments using a hybrid chunking strategy. This step is essential for enabling efficient embedding and retrieval.
+The chunking process consists of three stages:
+1. Header-Based Splitting
+The document is first divided based on structural headings, ensuring that each chunk represents a meaningful section.
+2. Token-Based Splitting
+If a chunk exceeds the allowed token limit, it is further divided into smaller parts using recursive splitting while maintaining overlap.
+3. Context Enrichment
+Each chunk is enriched with contextual metadata that reflects its position within the document hierarchy. This improves semantic representation during embedding.
+Chunks that are too small are discarded to avoid noise.
+\subsection{Stage 4: Embedding and Vector Storage}
+Once chunking is complete, each chunk is converted into a numerical vector using the embedding model.
+The system uses the mpnet base v2 model, which generates high-quality semantic embeddings. The embedding engine is implemented using a singleton pattern to ensure that the model is loaded only once during runtime, reducing overhead.
+To improve performance, embeddings are computed in batches and processed on the GPU.
+The resulting embeddings are stored in ChromaDB along with metadata such as:
+\begin{itemize}
+\item Source file name
+\item Page number
+\item Section information
+\item Chunk identifier
+\end{itemize}
+Each document is assigned a unique collection, allowing independent indexing and retrieval.
+
+
+
+
+
+
+
+
+Figure 4.1:Acrhitectural diagram of the mpv2net model
+\subsection{Stage 5: Quiz Generation}
+The final stage involves generating quiz questions based on user input.
+When a user submits a query, the system retrieves the most relevant chunks using semantic similarity search. These chunks are then used to construct a structured prompt.
+The prompt is passed to the local language model via Ollama. The model generates Multiple Choice Questions based on the provided context.
+The generated output is processed in two steps:
+1. Parsing
+The system extracts JSON data from the raw output.
+2. Validation
+The output is checked against a predefined schema to ensure correctness. Each question must include four options, a correct answer, and an explanation.
+If the output fails validation, the system retries the generation process up to a fixed number of attempts.
+\subsection{Implementation Summary}
+The implementation demonstrates a clear separation of responsibilities across modules. Each component performs a specific task, contributing to the overall efficiency and maintainability of the system.
+The use of local models, structured processing, and validation mechanisms ensures that the system produces reliable and context-aware quiz questions without relying on external services.
+\section{Testing Methods}
+The system was evaluated using a combination of unit testing, integration testing, and end-to-end pipeline testing.
+Testing was performed at each stage of the pipeline to isolate errors early and validate the functionality of individual modules before system-wide integration.
+1. Unit Testing
+Unit testing was conducted to verify the correctness of individual components such as parsing, cleaning, chunking, and validation.
+Key areas tested include:
+\begin{itemize}
+\item Correct extraction of structured text from PDFs
+\item Proper removal of noise during text cleaning
+\item Valid chunk size boundaries after chunking
+\item Correct JSON schema validation for MCQ output
+\end{itemize}
+The pytest framework was used to automate these tests.
+2. Integration Testing
+Integration testing focused on verifying interactions between modules.
+The following integrations were tested:
+\begin{itemize}
+\item Document Parsing → Text Cleaning → Semantic Chunking pipeline
+\item Hybrid Chunking → Embedding Generation → Local Vector Storage
+\item Semantic Retrieval → Prompt Engineering → Local LLM Inference
+\end{itemize}
+The objective was to ensure that data flows correctly between components without loss of information or structural inconsistencies.
+3. End-to-End Testing
+End-to-end testing evaluated the complete system workflow from document upload to quiz generation.
+Test procedure:
+1. Upload a PDF document
+2. Generate embeddings and store in database
+3. Submit a topic query
+4. Generate quiz
+5. Validate output
+This testing ensured that the system operates correctly under real usage conditions.
+\subsection{Query Validation and Threshold Testing}
+During testing, a significant issue was observed in the behavior of the system when handling user input. Even when users provided random or nonsensical text, the system was still generating quiz questions. This occurred because the retrieval mechanism would return some results regardless of query quality, leading to irrelevant context being passed to the language model.
+To address this problem, an experimental approach was taken to analyze how similarity scores behaved for different types of input. A range of test queries was used, including valid academic topics, loosely related phrases, and completely unrelated or random strings.
+It was observed that for meaningless queries, the similarity scores between the query and retrieved chunks were consistently low. Based on multiple trials, a similarity threshold of approximately 0.35 was found to be effective in distinguishing valid queries from irrelevant ones.
+Queries below this threshold typically produced poor-quality or unrelated results, while queries above it were more likely to correspond to meaningful topics within the document. Increasing the threshold further reduced noise but also led to rejection of some valid queries, which was not desirable.
+Therefore, a threshold of 0.35 was selected as a practical compromise. This allows the system to filter out clearly invalid inputs while still accepting legitimate queries. As a result, the overall quality and reliability of generated quizzes improved.
+
+
+Figure:4.2 Effect of Similarity Threshold.
+\subsection{Test Results}
+The system performed consistently across different testing scenarios. All major components operated as expected, and the complete pipeline successfully generated quiz questions from academic documents.
+The output generated by the system was generally well-structured and adhered to the required JSON format. The validation mechanism ensured that incorrect or incomplete responses were not returned to the user. In cases where the output did not meet the required format, the retry mechanism was able to correct the issue in subsequent attempts.
+The introduction of query filtering based on similarity threshold significantly improved system behavior. It prevented the generation of quizzes for irrelevant inputs and ensured that the output remained meaningful and contextually accurate.
+\subsection{Discussion}
+The testing process highlights the importance of validating both system functionality and input quality in a retrieval-based pipeline. While the core architecture performed effectively, the issue with invalid user queries demonstrated that retrieval alone is not sufficient to guarantee meaningful output.
+The introduction of a similarity threshold provided a simple yet effective solution to this problem. It improved the robustness of the system without adding significant complexity.
+Overall, the results indicate that the system is capable of generating reliable and context-aware quiz questions, provided that appropriate input validation mechanisms are in place.
+
+
+\section{Test Results}
+The performance of the system was evaluated based on its ability to correctly process documents, retrieve relevant information, and generate meaningful quiz questions. The evaluation was conducted using real academic PDF documents and multiple types of user queries.
+During testing, a document consisting of approximately 80 pages was successfully processed by the system. The indexing pipeline generated a total of 262 chunks, which were stored in the vector database for retrieval.
+This demonstrates that the hybrid chunking strategy was effective in breaking down large documents into manageable and semantically meaningful units suitable for embedding and retrieval.
+
+
+
+
+Test Suite
+Tests Run
+Result
+test\_chunking.py
+5
+5 passed
+test\_quiz\_generation.py
+4
+4 passed
+test\_retrieval.py
+3
+3 passed
+Total
+12
+12 passed
+Table 4.2:Test Suite Execution Results
+\subsection{Retrieval Quality and Query Behavior}
+The quality of retrieval was evaluated by observing similarity scores for different types of user queries.
+For meaningful queries, the system was able to retrieve relevant chunks with higher similarity scores, leading to accurate and context-aware quiz generation. However, for vague or invalid inputs such as “generate me quiz”, the similarity scores remained low.
+From the recorded logs:
+Top similarity scores for the query “generate me quiz” were approximately:
+(0.2939,0.2664,0.2424)
+Similarly, for completely nonsensical input such as “quiz”, the scores were even lower:
+(0.2029,0.1832,0.1666)
+These observations indicate that irrelevant queries consistently produce low similarity scores, confirming the effectiveness of embedding-based semantic retrieval.
+
+
+\subsection{Effectiveness of Similarity Threshold}
+Based on experimental testing, a similarity threshold of 0.35 was selected to filter user queries.This behavior is evident from the logs, where queries below the threshold resulted in:
+“No relevant content found for topic”
+This improvement significantly enhanced the robustness of the system by preventing meaningless outputs.
+\subsection{System Behavior Under Invalid Inputs}
+Before introducing the similarity threshold, the system attempted to generate quizzes even for invalid or nonsensical queries. This led to poor-quality outputs.
+After applying threshold-based filtering:
+\begin{itemize}
+\item Invalid queries resulted in a 400 Bad Request response
+\item No unnecessary computation was performed by the LLM
+\item System reliability improved
+\end{itemize}
+This demonstrates that incorporating query validation is essential in RAG-based systems.
+\subsection{Overall System Performance}
+The system demonstrated stable and efficient performance across all tested scenarios.
+\begin{itemize}
+\item Document indexing was completed successfully without failures
+\item The retrieval mechanism consistently returned relevant context for valid queries
+\item The quiz generation pipeline produced structured and valid MCQs
+\item Error handling mechanisms prevented invalid outputs
+\end{itemize}
+The modular design of the system ensured that each component functioned independently while contributing to the overall pipeline.
+\subsection{Discussion}
+The experimental results confirm that the system effectively combines retrieval and generation to produce accurate quiz questions from academic documents. The hybrid chunking strategy and embedding-based retrieval ensured that relevant context was selected even from large documents.
+The introduction of a similarity threshold was a key improvement, as it addressed a practical issue observed during testing. By preventing responses to invalid queries, the system achieves better reliability and user experience.
+Overall, the system demonstrates that an offline RAG-based architecture can provide high-quality results comparable to cloud-based solutions while maintaining privacy and cost efficiency.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\chapter{Results and Discussion}
+\section{Results Analysis}
+The Offline RAG-Powered Quiz Generator successfully completed end-to-end pipeline execution on academic PDF documents from multiple computer science domains. The system parsed, cleaned, chunked, embedded, and indexed documents, and subsequently generated validated MCQs from user-specified topics.
+During evaluation, the system was tested with the embeddings.pdf document (83 pages, 80 useful pages after quality filtering, 262 semantic chunks after indexing). Queries on topics present in the document consistently returned relevant chunks in the top-8 results, and the LLM generated correctly formatted MCQs with accurate answers grounded in the retrieved context. The pipeline completed the indexing phase in approximately 90 seconds for an 83-page document on the test hardware, and MCQ generation took between 25 and 45 seconds per question depending on difficulty.The system successfully performed all stages of processing, including document parsing, text cleaning, semantic chunking, embedding generation, vector storage, retrieval, and quiz generation. The results demonstrate that the system is capable of producing structured and contextually accurate Multiple Choice Questions based on user-defined topics.
+For evaluation, the system was tested using an academic document related to embeddings, consisting of 83 pages. After applying quality filtering, approximately 80 pages were retained for processing, resulting in a total of 262 semantic chunks during the indexing phase. This confirms that the hybrid chunking strategy effectively captures meaningful sections of the document while eliminating irrelevant or low-quality content.
+When users provided queries corresponding to topics present in the document, the retrieval mechanism consistently returned relevant chunks within the top results. These retrieved segments served as effective context for the language model, enabling it to generate MCQs that were both accurate and grounded in the source material. The generated questions were structurally correct and adhered to the required format, including options, correct answers, and explanations.
+The overall system performance was also analyzed in terms of execution time. The indexing phase for the 83-page document was completed in approximately 90 seconds on the test hardware. Once indexing was complete, quiz generation required between 25 and 45 seconds per question, depending on the complexity and difficulty level. These results indicate that while indexing is relatively resource-intensive, it is performed only once per document, whereas query-time performance remains acceptable for practical usage.
+Sample MCQ Output
+
+
+Field
+Content
+Question
+What is the primary advantage of using Approximate Nearest Neighbor (ANN) algorithms over exact search in high-dimensional vector spaces?
+Option A
+They guarantee the mathematically closest vector in all cases
+Option B
+They dramatically reduce search time at a small cost to accuracy
+Option C
+They require less memory than exact search algorithms
+Option D
+They are only effective for datasets with fewer than 1000 vectors
+Correct Answer
+B
+Explanation
+ANN algorithms trade a small degree of exactness for significantly faster search times, making large-scale vector retrieval practical in production RAG systems.
+Table 5.1:Sample MCQ Generated by the System
+A representative example of an MCQ generated by the system is presented below. This example illustrates that the system is able to generate questions that are not only syntactically correct but also conceptually meaningful. The explanation provided further enhances the educational value of the generated quiz.
+\section{Performance Evaluation}
+The performance of the system was evaluated across different stages of the pipeline to understand computational efficiency and identify potential bottlenecks. The evaluation was conducted on a system equipped with an NVIDIA RTX 2050 GPU (4 GB VRAM), an Intel Core i5 processor, and 8 GB RAM.
+The results indicate that the most time-consuming stages are semantic chunking and vector storage, primarily due to the embedding process. However, the use of GPU acceleration significantly improves embedding throughput, making the system feasible for practical use.
+Stage
+Metric
+Result
+PDF Parsing (83 pages)
+Time
+69.4 seconds
+Text Cleaning (405 pages)
+Time
+0.07 seconds
+Semantic Chunking
+Chunks / Time
+262 chunks / \~{}88 seconds
+Embedding (GPU, CUDA)
+Throughput
+102 it/s (query embedding)
+ChromaDB Upsert
+Time (262 chunks)
+\~{}56 seconds
+MCQ Generation (per Q)
+Response time
+25 - 45 seconds
+JSON Validation Success
+Rate (attempt 1)
+\~{}90\% (retry rarely needed)
+Table 5.2: Performance Metrics of the System Across Pipeline Stages
+The results show that the system maintains a balance between performance and accuracy. While indexing is computationally intensive, it is performed only once per document. The retrieval and generation stages, which are executed during user interaction, operate within acceptable time limits.
+\section{Discussion}
+The experimental results highlight several important aspects of the system design. The hybrid chunking strategy plays a critical role in ensuring high-quality retrieval. By combining structural splitting based on document headings with token-based subdivision, the system preserves semantic coherence within each chunk. This directly improves embedding quality and enables more accurate similarity-based retrieval.
+The inclusion of breadcrumb metadata further enhances the representation of each chunk by incorporating its position within the document hierarchy. This additional context allows the embedding model to capture both local content and structural relationships, which contributes to improved retrieval relevance.
+The use of GPU acceleration significantly improves performance during embedding generation. Query embedding time is reduced to a negligible duration, ensuring that retrieval remains efficient even for large document collections. The use of a singleton embedding engine also eliminates repeated model loading overhead, which was identified as a performance bottleneck in earlier iterations.
+The language model used for quiz generation demonstrated strong capability in following structured prompts. The high rate of successful JSON validation on the first attempt indicates that the prompt design is effective in guiding the model to produce well-formatted output. The retry mechanism provides an additional layer of robustness, ensuring that occasional formatting errors do not affect the final output.
+Despite these strengths, certain limitations were observed. The indexing process for large documents remains time-consuming due to the need for embedding each chunk. For very large documents, such as those exceeding several hundred pages, indexing time increases significantly. While this does not affect runtime performance, it may impact usability in scenarios requiring frequent re-indexing.
+Another limitation is that the system currently relies on textual PDFs and does not support scanned documents requiring OCR. Additionally, while the similarity threshold mechanism improves robustness, it may occasionally reject borderline valid queries.
+Overall, the results demonstrate that the system effectively combines retrieval and generation to produce accurate and reliable quiz content. The design choices made in chunking, embedding, and validation contribute directly to the system’s performance and usability, validating the effectiveness of the offlineRAG-based approach.
+
+
+Figure 5.1:simplified architecture  of the llama 3.1 model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\chapter{Conclusion and Future Work}
+\section{Conclusion}
+The Offline RAG-Powered Quiz Generator was successfully designed, implemented, and evaluated as a complete end-to-end system for generating Multiple Choice Questions from academic PDF documents. The project demonstrates that it is feasible to build a high-quality, AI-driven educational tool entirely using local resources, without relying on cloud-based services or external APIs.
+The system integrates multiple components into a unified pipeline that transforms raw PDF documents into structured and meaningful quiz content. The five-stage processing pipeline—document parsing, text cleaning, semantic chunking, embedding generation, and quiz generation—operates cohesively and produces reliable results. Each stage contributes to improving the quality of the final output, ensuring that generated questions are grounded in the source material.
+A key contribution of this work is the implementation of a hybrid chunking strategy that combines structural splitting based on document headings with token-based segmentation. This approach preserves semantic coherence while maintaining compatibility with model input constraints. The resulting chunks are more meaningful compared to naive fixed-size splitting, which directly improves retrieval accuracy and, consequently, the quality of generated questions.
+The use of embedding-based retrieval further enhances system performance by ensuring that only the most relevant portions of the document are passed to the language model. This significantly reduces hallucination and improves factual correctness. The integration of a similarity threshold mechanism for query validation adds an additional layer of robustness by preventing the system from generating output for irrelevant or nonsensical inputs.
+Another important aspect of the system is its fully offline operation. By leveraging local models for both embedding generation and language model inference, the system eliminates dependency on internet connectivity and avoids recurring costs associated with API usage. This makes the solution accessible and practical for students and institutions with limited resources or strict data privacy requirements.
+The implementation also demonstrates efficient use of hardware resources. GPU acceleration enables fast embedding computation, while the modular design of the system ensures that each component operates independently and efficiently. The use of FastAPI for backend services and React for the frontend results in a responsive and user-friendly application that can be used without specialized technical knowledge.
+From an evaluation perspective, the system performed consistently across all stages. Document indexing was completed within acceptable time limits, retrieval produced relevant context for valid queries, and the language model generated well-structured MCQs with high accuracy. The validation and retry mechanisms ensured that output quality remained consistent even in cases where the model initially produced imperfect results.
+Overall, the project successfully achieves its primary objective of developing a privacy-preserving, cost-effective, and reliable quiz generation system. It demonstrates how modern AI techniques, when combined with careful system design, can be deployed locally to solve real-world problems in education. The results validate the effectiveness of the Retrieval-Augmented Generation paradigm in producing context-aware and accurate outputs, even in an offline setting.
+
+
+\section{Future Scope}
+While the current system provides a functional and reliable solution, several enhancements can be made to improve its capabilities, scalability, and usability. These improvements focus on extending the system beyond its current limitations and adapting it to a wider range of use cases.
+One potential improvement is the enhancement of the chunking strategy. Although the current hybrid approach performs well for structured academic documents, it still relies on predefined rules for splitting text. A more advanced approach would involve semantic chunking using language models, where sentence boundaries are determined based on contextual similarity rather than fixed thresholds. This would allow the system to adapt more effectively to documents with less rigid structure, such as research papers or narrative content.
+Another important extension is the addition of Optical Character Recognition (OCR) capabilities. The current system is limited to text-based PDFs and cannot process scanned documents or images. Integrating OCR tools such as Tesseract or PaddleOCR would enable the system to extract text from image-based documents, significantly expanding its applicability.
+The system can also be improved by supporting multi-document querying. At present, each document is processed and stored independently. Enabling retrieval across multiple documents simultaneously would allow users to generate quizzes from combined sources, such as multiple chapters or textbooks. This would require a unified vector database structure with appropriate metadata filtering to maintain relevance.
+Expanding the range of question types is another area for future development. Currently, the system focuses on generating multiple choice questions. However, educational assessment often involves a variety of formats, including short-answer questions, true/false statements, and descriptive questions. Supporting multiple formats would make the system more versatile and useful in different learning contexts.
+Integration with external platforms could further enhance usability. For example, connecting the system with tools such as Google Forms would allow automatic creation and distribution of quizzes. This would be particularly useful for educators who wish to deploy generated quizzes directly in a classroom environment.
+The development of a mobile application is another practical extension. While the current web-based interface is accessible, a dedicated mobile application built using frameworks such as React Native or Flutter would improve accessibility and convenience for users who primarily use smartphones.
+Performance optimization is also an important consideration. One potential improvement is the implementation of an embedding cache mechanism, where previously computed embeddings are stored and reused. This would significantly reduce indexing time when processing the same document multiple times, making the system more efficient.
+Another area of improvement involves enhancing the reliability of generated content. Although the current system uses retrieval to reduce hallucination, an additional verification step could be introduced. This would involve evaluating each generated question and its options against the retrieved context to ensure factual consistency. Such a mechanism would further improve the trustworthiness of the output.
+Finally, the system could benefit from the incorporation of personalization features. By tracking user preferences, performance, or learning history, the system could generate quizzes tailored to individual users. This would transform the system from a static tool into an adaptive learning platform.
+\section{Final Remarks}
+The project highlights the practical potential of combining retrieval-based methods with local language models to create intelligent applications that are both efficient and accessible. By focusing on offline execution and open-source technologies, the system addresses key challenges related to cost, privacy, and usability.
+The work presented in this project lays a strong foundation for future developments in offline AI systems for education. With further enhancements, the system can evolve into a comprehensive learning assistant capable of supporting a wide range of educational activities.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Team Members
+
+
+
+Name: Kushagra Pandey
+Er No: 231B180
+Branch: CSE
+Email: kushagrapandey096@gmail.com
+University: JUET, Guna
+Phone No: 91792 00936
+
+
+
+
+
+Name: K.S.Aravind
+Er No: 231B156
+Branch: CSE
+Email: karlapalemaravind@gmail.com
+University: JUET, Guna
+Phone No:  63031 39659
+
+
+
+
+
+
+Name: Kush Sharma
+Er No: 231B176
+Branch: CSE
+Email:kushsharma1903@gamil.com
+University: JUET, Guna.
+Phone No: 99817 45120
+\end{document}

@@ -1,54 +1,25 @@
 """
-chunker.py — Semantic Chunker with Adaptive Breakpoint Detection
+chunker.py - Hybrid Header + Semantic Chunker
 ==================================================================
 
-The most technically complex module in the pipeline. Splits cleaned
-documents into chunks at NATURAL TOPIC BOUNDARIES instead of at
-arbitrary character counts.
+Two-pass chunking pipeline for academic PDFs:
 
-Algorithm Overview:
-    1. Tokenize document text into individual sentences (NLTK punkt).
-    2. Embed every sentence using SentenceTransformer (batched).
-    3. Compute cosine similarity between each consecutive sentence pair.
-    4. Calculate an adaptive breakpoint threshold:
-           threshold = mean(similarities) - k * std(similarities)
-    5. Insert chunk boundaries wherever consecutive similarity drops
-       below the threshold (= a natural topic shift).
-    6. Merge sentences between breakpoints into coherent chunks.
-    7. Apply min/max size guardrails to prevent degenerate output.
+  Pass 1 - Header-Aware Split (MarkdownHeaderTextSplitter):
+      Splits Markdown text at H1/H2/H3 heading boundaries.
+      Academic notes are organized by topic, so each section heading
+      IS a natural semantic boundary. This is the single biggest
+      quality improvement for retrieval.
 
-Why This Beats Naive Chunking (RecursiveCharacterTextSplitter):
-    ┌─────────────────────────┬──────────────────────────────────────┐
-    │ Naive (Fixed-Window)    │ Semantic (This Module)              │
-    ├─────────────────────────┼──────────────────────────────────────┤
-    │ Splits at char count    │ Splits at topic boundaries          │
-    │ Fragments mid-concept   │ Preserves complete ideas            │
-    │ Noisy embeddings        │ Clean, focused embeddings           │
-    │ Same threshold for all  │ Adaptive per-document threshold     │
-    │ Overlap needed as hack  │ No overlap needed (natural breaks)  │
-    └─────────────────────────┴──────────────────────────────────────┘
+  Pass 2 - Semantic Split (for oversized sections):
+      If a header-section is too large (>max_chunk_size chars), the
+      existing semantic chunker (embedding-based adaptive breakpoints)
+      splits it further at natural topic shifts within the section.
 
-Mathematical Foundation:
-    Given consecutive sentence embeddings e_1, e_2, ..., e_n, we compute:
-
-        d_i = cosine_similarity(e_i, e_{i+1})    for i in [1, n-1]
-
-    The similarity sequence D = [d_1, d_2, ..., d_{n-1}] represents
-    the "coherence signal" of the document. Topic shifts appear as
-    valleys (local minima) in this signal.
-
-    We set a global threshold:
-        T = μ(D) - k · σ(D)
-
-    Where:
-        μ(D) = mean of all consecutive similarities
-        σ(D) = standard deviation of similarities
-        k    = sensitivity parameter (default 1.0)
-
-    Any position i where d_i < T is marked as a breakpoint.
-    This is adaptive because μ and σ are computed per-document,
-    so technical papers (lower baseline similarity) and narrative
-    text (higher baseline similarity) get appropriate thresholds.
+  Post-processing:
+      - Section metadata (breadcrumb) is prepended to each chunk text
+        for embedding, e.g. "Chapter 3 > Scheduling > FCFS: ..."
+      - Size guardrails enforce min/max chunk sizes.
+      - Deterministic IDs enable idempotent storage.
 
 Usage:
     from app.core.chunker import SemanticChunker
@@ -59,6 +30,7 @@ Usage:
     chunks = chunker.chunk(cleaned_documents)
 
 Dependencies:
+    - langchain-text-splitters (MarkdownHeaderTextSplitter)
     - sentence-transformers (via EmbeddingEngine)
     - nltk (punkt_tab tokenizer for sentence splitting)
     - numpy (cosine similarity computation)
@@ -96,7 +68,7 @@ class Chunk:
     extracted from the source document.
 
     Attributes:
-        text:       The chunk content (merged sentences).
+        text:       The chunk content (with breadcrumb prepended).
         chunk_id:   Deterministic ID for idempotent storage.
                     Computed as SHA-256 of (source + chunk_index).
         metadata:   Dictionary containing provenance information:
@@ -106,6 +78,9 @@ class Chunk:
                     - chunk_index:   Sequential index within the document
                     - num_sentences: How many sentences were merged
                     - char_count:    Character length of the chunk
+                    - section:       H1 heading this chunk belongs to
+                    - subsection:    H2 heading this chunk belongs to
+                    - subsubsection: H3 heading this chunk belongs to
     """
 
     text: str
@@ -153,10 +128,10 @@ def _split_into_sentences(text: str) -> list[str]:
     Split text into sentences using NLTK's punkt_tab tokenizer.
 
     Why NLTK over regex:
-        - Handles abbreviations: "Dr. Smith went..." → 1 sentence
-        - Handles decimals: "scored 3.5 points" → not split at "3."
-        - Handles ellipses: "wait... what?" → 1 sentence
-        - Academic-aware: "et al. (2020)" → not split
+        - Handles abbreviations: "Dr. Smith went..." -> 1 sentence
+        - Handles decimals: "scored 3.5 points" -> not split at "3."
+        - Handles ellipses: "wait... what?" -> 1 sentence
+        - Academic-aware: "et al. (2020)" -> not split
 
     Args:
         text: Cleaned document text.
@@ -172,6 +147,81 @@ def _split_into_sentences(text: str) -> list[str]:
 
     # Filter out empty/whitespace-only sentences
     return [s.strip() for s in sentences if s.strip()]
+
+
+# ================================================================
+# Header-Aware Split (Pass 1) - MarkdownHeaderTextSplitter
+# ================================================================
+
+# Headers to split on - matches H1, H2, H3 in Markdown output
+HEADERS_TO_SPLIT_ON = [
+    ("#",   "section"),
+    ("##",  "subsection"),
+    ("###", "subsubsection"),
+]
+
+
+def _split_by_headers(markdown_text: str) -> list[dict]:
+    """
+    Split Markdown text at heading boundaries using LangChain's
+    MarkdownHeaderTextSplitter.
+
+    Each resulting chunk contains text from a single section,
+    with metadata indicating which headings it belongs to.
+
+    Args:
+        markdown_text: Full Markdown text from pymupdf4llm.
+
+    Returns:
+        List of dicts with 'text' and 'metadata' (section, subsection, etc.).
+        If no headers are found, returns the full text as a single chunk.
+    """
+    try:
+        from langchain_text_splitters import MarkdownHeaderTextSplitter
+    except ImportError:
+        logger.warning(
+            "langchain-text-splitters not installed - "
+            "falling back to full-text chunking"
+        )
+        return [{"text": markdown_text, "metadata": {}}]
+
+    splitter = MarkdownHeaderTextSplitter(
+        headers_to_split_on=HEADERS_TO_SPLIT_ON,
+        strip_headers=False,  # Keep headers in chunk text for context
+    )
+
+    docs = splitter.split_text(markdown_text)
+
+    if not docs:
+        # No headers found - return full text as single chunk
+        return [{"text": markdown_text, "metadata": {}}]
+
+    results = []
+    for doc in docs:
+        results.append({
+            "text": doc.page_content,
+            "metadata": dict(doc.metadata) if doc.metadata else {},
+        })
+
+    logger.debug(f"  Header split produced {len(results)} section(s)")
+    return results
+
+
+def _build_breadcrumb(metadata: dict) -> str:
+    """
+    Build a heading breadcrumb string from section metadata.
+
+    Example: "Chapter 3 > Process Scheduling > FCFS Algorithm"
+
+    This breadcrumb is prepended to chunk text before embedding,
+    which dramatically improves retrieval specificity by encoding
+    the section context into the embedding vector.
+    """
+    parts = []
+    for key in ["section", "subsection", "subsubsection"]:
+        if key in metadata and metadata[key]:
+            parts.append(metadata[key])
+    return " > ".join(parts)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -190,7 +240,7 @@ class SemanticChunker:
         embedding_engine:   An initialized EmbeddingEngine instance
                             used to embed individual sentences.
         breakpoint_k:       Sensitivity multiplier for the breakpoint
-                            threshold. Higher k → fewer, larger chunks.
+                            threshold. Higher k -> fewer, larger chunks.
                             Default from config: 1.0
         min_chunk_size:     Minimum character count per chunk. Chunks
                             below this are merged with neighbors.
@@ -208,9 +258,9 @@ class SemanticChunker:
         max_chunk_size: int | None = None,
     ) -> None:
         self._engine = embedding_engine
-        self._k = breakpoint_k or settings.chunker.breakpoint_sensitivity_k
-        self._min_size = min_chunk_size or settings.chunker.min_chunk_size
-        self._max_size = max_chunk_size or settings.chunker.max_chunk_size
+        self._k = breakpoint_k or 1.5
+        self._min_size = min_chunk_size or 100
+        self._max_size = max_chunk_size or 1000
 
         logger.info(
             f"SemanticChunker initialized — "
@@ -263,7 +313,7 @@ class SemanticChunker:
             all_chunks.extend(chunks)
 
             logger.info(
-                f"  → {len(chunks)} semantic chunks created "
+                f"  -> {len(chunks)} semantic chunks created "
                 f"from {source_name}"
             )
 
@@ -287,16 +337,18 @@ class SemanticChunker:
         source_docs: list[Document],
     ) -> list[Chunk]:
         """
-        Apply semantic chunking to all pages of a single PDF.
+        Apply hybrid Header + Semantic chunking to all pages of a single PDF.
 
-        Steps:
-            1. Concatenate all pages into one text stream.
-            2. Split into sentences.
-            3. Embed all sentences (batched).
-            4. Find breakpoints using adaptive threshold.
-            5. Merge sentences between breakpoints into chunks.
-            6. Apply min/max size guardrails.
-            7. Assign deterministic IDs and metadata.
+        Two-pass pipeline:
+            Pass 1: MarkdownHeaderTextSplitter splits at H1/H2/H3 boundaries.
+                    Each section gets metadata (section, subsection, etc.).
+            Pass 2: Sections larger than max_chunk_size are further split
+                    using the semantic chunker (embedding-based breakpoints).
+
+        Post-processing:
+            - Breadcrumb (heading path) is prepended to each chunk text.
+            - Size guardrails enforce min/max sizes.
+            - Deterministic IDs are assigned.
 
         Args:
             source_name: Filename of the source PDF.
@@ -305,12 +357,9 @@ class SemanticChunker:
         Returns:
             List of Chunk objects for this document.
         """
-        # ── Step 1: Build page-aware text stream ─────────────────────
-        # We track which page each sentence came from by building
-        # a mapping of character offsets to page numbers.
+        # -- Build page-aware text stream --
         full_text = ""
         page_boundaries: list[tuple[int, int, int]] = []
-        # Each entry: (start_char, end_char, page_number)
 
         for doc in source_docs:
             start = len(full_text)
@@ -320,51 +369,71 @@ class SemanticChunker:
                 start, end, doc.metadata.get("page", 0)
             ))
 
-        # ── Step 2: Sentence tokenization ────────────────────────────
-        sentences = _split_into_sentences(full_text)
-
-        if len(sentences) <= 1:
-            # Edge case: document has 0 or 1 sentences — no splitting
-            logger.debug(f"  {source_name}: ≤1 sentence, returning as single chunk")
-            return self._create_single_chunk(
-                full_text.strip(), source_name, source_docs
-            )
-
-        logger.debug(f"  {source_name}: {len(sentences)} sentences extracted")
-
-        # ── Step 3: Batch embed all sentences ────────────────────────
-        # This is done in a single call for efficiency. Embedding
-        # 500 sentences one-at-a-time would be ~50× slower than
-        # a single batched call.
-        sentence_embeddings = self._engine.embed_texts(sentences)
-
-        # ── Step 4: Compute consecutive cosine similarities ──────────
-        similarities = self._compute_consecutive_similarities(
-            sentence_embeddings
-        )
-
-        # ── Step 5: Find breakpoints ─────────────────────────────────
-        breakpoints = self._find_breakpoints(similarities)
+        # ==============================================================
+        # PASS 1: Header-aware split (MarkdownHeaderTextSplitter)
+        # ==============================================================
+        header_sections = _split_by_headers(full_text)
         logger.debug(
-            f"  {source_name}: {len(breakpoints)} breakpoints detected "
-            f"out of {len(similarities)} sentence pairs"
+            f"  {source_name}: Pass 1 (headers) produced "
+            f"{len(header_sections)} section(s)"
         )
 
-        # ── Step 6: Merge sentences into chunks ──────────────────────
-        raw_chunks = self._merge_sentences_at_breakpoints(
-            sentences, breakpoints
-        )
+        # ==============================================================
+        # PASS 2: Semantic split for oversized sections
+        # ==============================================================
+        final_section_chunks: list[dict] = []  # {"text": str, "metadata": dict}
 
-        # ── Step 7: Apply size guardrails ────────────────────────────
-        sized_chunks = self._apply_size_guardrails(raw_chunks)
+        for section in header_sections:
+            section_text = section["text"]
+            section_meta = section["metadata"]
 
-        # ── Step 8: Build Chunk objects with metadata ────────────────
+            if len(section_text) <= self._max_size:
+                # Section fits within size limit - keep as-is
+                final_section_chunks.append(section)
+            else:
+                # Section too large - apply semantic sub-splitting
+                logger.debug(
+                    f"  Section '{section_meta.get('section', '?')}' "
+                    f"is {len(section_text)} chars - applying semantic split"
+                )
+                sub_chunks = self._semantic_split_text(section_text)
+                for sub_text in sub_chunks:
+                    final_section_chunks.append({
+                        "text": sub_text,
+                        "metadata": section_meta,  # Inherit section metadata
+                    })
+
+        # ==============================================================
+        # POST-PROCESSING: Breadcrumb injection + size guardrails
+        # ==============================================================
+        raw_texts = []
+        section_metas = []
+        for chunk_data in final_section_chunks:
+            text = chunk_data["text"]
+            meta = chunk_data["metadata"]
+
+            # Prepend breadcrumb to chunk text for richer embeddings
+            breadcrumb = _build_breadcrumb(meta)
+            enriched_text = f"{breadcrumb}\n{text}" if breadcrumb else text
+
+            raw_texts.append(enriched_text)
+            section_metas.append(meta)
+
+        # Apply size guardrails
+        sized_chunks = self._apply_size_guardrails(raw_texts)
+
+        # Build Chunk objects with metadata
         result: list[Chunk] = []
         for idx, chunk_text in enumerate(sized_chunks):
             # Determine which pages this chunk spans
             page_start, page_end = self._find_page_span(
                 chunk_text, full_text, page_boundaries
             )
+
+            # Get section metadata from the corresponding pre-guardrail chunk
+            # (best-effort mapping since guardrails may merge/split)
+            meta_idx = min(idx, len(section_metas) - 1) if section_metas else 0
+            sec_meta = section_metas[meta_idx] if section_metas else {}
 
             chunk_id = self._generate_chunk_id(source_name, idx)
 
@@ -378,10 +447,39 @@ class SemanticChunker:
                     "chunk_index": idx,
                     "num_sentences": chunk_text.count(". ") + 1,
                     "char_count": len(chunk_text),
+                    "section": sec_meta.get("section", ""),
+                    "subsection": sec_meta.get("subsection", ""),
+                    "subsubsection": sec_meta.get("subsubsection", ""),
                 },
             ))
 
         return result
+
+    # -- Semantic sub-splitting (for oversized header sections) ---------
+
+    def _semantic_split_text(self, text: str) -> list[str]:
+        """
+        Split a single text block using embedding-based semantic chunking.
+
+        This is the Pass 2 algorithm: tokenize into sentences, embed,
+        find breakpoints via adaptive threshold, merge at breakpoints.
+
+        Used only for header-sections that exceed max_chunk_size.
+        """
+        sentences = _split_into_sentences(text)
+
+        if len(sentences) <= 1:
+            return [text.strip()] if text.strip() else []
+
+        # Embed and find breakpoints
+        sentence_embeddings = self._engine.embed_texts(sentences)
+        similarities = self._compute_consecutive_similarities(sentence_embeddings)
+        breakpoints = self._find_breakpoints(similarities)
+
+        # Merge at breakpoints
+        raw_chunks = self._merge_sentences_at_breakpoints(sentences, breakpoints)
+
+        return raw_chunks
 
     # ── Similarity Computation ───────────────────────────────────────
 
@@ -389,23 +487,7 @@ class SemanticChunker:
     def _compute_consecutive_similarities(
         embeddings: np.ndarray,
     ) -> np.ndarray:
-        """
-        Compute cosine similarity between each pair of consecutive
-        sentence embeddings.
-
-        For embeddings [e_0, e_1, e_2, ..., e_n], computes:
-            [cos(e_0, e_1), cos(e_1, e_2), ..., cos(e_{n-1}, e_n)]
-
-        Since our embeddings are L2-normalized (done in EmbeddingEngine),
-        cosine similarity simplifies to a dot product:
-            cos(a, b) = a · b / (||a|| · ||b||) = a · b   (when ||a||=||b||=1)
-
-        Args:
-            embeddings: (n, d) array of L2-normalized sentence embeddings.
-
-        Returns:
-            (n-1,) array of similarity scores in range [-1, 1].
-        """
+       
         # Efficient vectorized dot product between consecutive pairs
         # This avoids a Python loop over potentially thousands of sentences.
         similarities = np.array([
@@ -480,7 +562,7 @@ class SemanticChunker:
             List of merged chunk texts.
         """
         if not breakpoints:
-            # No breakpoints → entire document is one chunk
+            # No breakpoints -> entire document is one chunk
             return [" ".join(sentences)]
 
         chunks: list[str] = []
@@ -538,7 +620,7 @@ class SemanticChunker:
                 if len(combined) <= self._max_size:
                     buffer = combined
                 else:
-                    # Buffer + current exceeds max → flush buffer, start new
+                    # Buffer + current exceeds max -> flush buffer, start new
                     merged.append(buffer)
                     buffer = chunk
             else:

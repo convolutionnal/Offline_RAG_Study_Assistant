@@ -1,0 +1,301 @@
+\begin{itemize}
+  \item \hyperlink{page.i}{\textbf{DECLARATION BY THE STUDENT}} \dotfill i
+  \item \hyperlink{page.ii}{\textbf{CERTIFICATE}} \dotfill ii
+  \item \hyperlink{page.iii}{\textbf{ACKNOWLEDGEMENT}} \dotfill iii
+  \item \hyperlink{page.iv}{\textbf{ABSTRACT}} \dotfill iv
+  \item \hyperlink{page.v}{\textbf{LIST OF FIGURES}} \dotfill v
+  \item \hyperlink{page.vi}{\textbf{LIST OF TABLES}} \dotfill vi
+  \item \hyperlink{page.vii}{\textbf{LIST OF ABBREVIATIONS AND ACRONYMS}} \dotfill vii
+  \item \hyperlink{page.xiii}{\textbf{CHAPTER 1: INTRODUCTION}} \dotfill xiii
+    \begin{itemize}
+      \item \hyperlink{page.xiii}{1.1 Background of the Study} \dotfill xiii
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.1}{1.2 Problem Statement} \dotfill 1
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.1}{1.3 Objectives} \dotfill 1
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.2}{1.4 Scope of the Project} \dotfill 2
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.2}{1.5 Organization of the Report} \dotfill 2
+    \end{itemize}
+  \item \hyperlink{page.3}{\textbf{CHAPTER 2: LITERATURE REVIEW AND BACKGROUND}} \dotfill 3
+    \begin{itemize}
+      \item \hyperlink{page.3}{2.1 Existing Systems and Related Work} \dotfill 3
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.3}{2.1.1 Human-Curated AI Newsletters} \dotfill 3
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.3}{2.1.2 Automated Content Aggregation Systems} \dotfill 3
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.3}{2.1.3 Newsletter Platforms and Email Marketing Tools} \dotfill 3
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.4}{2.1.4 Academic Work on Automated Newsletter Generation} \dotfill 4
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.4}{2.1.5 Model Context Protocol (MCP) and AI Agent Tooling} \dotfill 4
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.4}{2.1.6 Email Delivery Systems and Nodemailer} \dotfill 4
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.5}{2.2 Comparative Analysis of Existing Work} \dotfill 5
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.6}{2.3 Limitations of Existing Work} \dotfill 6
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.6}{2.4 Need for the Proposed System} \dotfill 6
+    \end{itemize}
+  \item \hyperlink{page.7}{\textbf{CHAPTER 3: SYSTEM ANALYSIS AND DESIGN}} \dotfill 7
+    \begin{itemize}
+      \item \hyperlink{page.7}{3.1 System Architecture} \dotfill 7
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.7}{3.1.1 Presentation Tier (Frontend)} \dotfill 7
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.7}{3.1.2 Logic Tier (Backend)} \dotfill 7
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.8}{3.1.3 Data Tier (MongoDB)} \dotfill 8
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.8}{3.1.4 MCP Content Sourcing Layer} \dotfill 8
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.8}{3.2 Database Design} \dotfill 8
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.9}{3.3 UML Diagrams} \dotfill 9
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.9}{3.3.1 Use Case Diagram} \dotfill 9
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.9}{3.3.2 Sequence Diagram — Subscription Workflow} \dotfill 9
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.9}{3.3.3 Sequence Diagram — Newsletter Dispatch Workflow} \dotfill 9
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.9}{3.3.4 Data Flow Diagram (Level 0 — Context Diagram)} \dotfill 9
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.10}{3.3.5 Data Flow Diagram (Level 1)} \dotfill 10
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.10}{3.4 REST API Design} \dotfill 10
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.11}{3.4.1 POST /api/subscribe — Request and Response} \dotfill 11
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.11}{3.4.2 POST /api/unsubscribe — Request and Response} \dotfill 11
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.11}{3.5 CSS Architecture and Frontend Styling Strategy} \dotfill 11
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.11}{3.5.1 CSS Custom Properties (Design Tokens)} \dotfill 11
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.12}{3.5.2 Responsive Layout} \dotfill 12
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.13}{3.6 Security Considerations in Design} \dotfill 13
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.13}{3.6.1 Input Validation} \dotfill 13
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.13}{3.6.2 Environment Variable Management} \dotfill 13
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.13}{3.6.3 CORS Configuration} \dotfill 13
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.13}{3.6.4 Admin Endpoint Protection (Current Limitation)} \dotfill 13
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.14}{3.7 Component Interaction Diagram} \dotfill 14
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.14}{3.8 Error Handling Strategy} \dotfill 14
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.15}{3.9 Workflow of AI-Based Newsletter Generation} \dotfill 15
+    \end{itemize}
+  \item \hyperlink{page.17}{\textbf{CHAPTER 4: IMPLEMENTATION AND TESTING}} \dotfill 17
+    \begin{itemize}
+      \item \hyperlink{page.17}{4.1 Tools and Technologies Used} \dotfill 17
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.17}{4.2 Project Directory Structure} \dotfill 17
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.18}{4.3 Backend Implementation} \dotfill 18
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.18}{4.3.1 Server Entry Point (server.js)} \dotfill 18
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.19}{4.3.2 Subscriber Schema (models/Subscriber.js)} \dotfill 19
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.19}{4.3.3 Subscription Route Handler (routes/subscribe.js)} \dotfill 19
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.20}{4.3.4 Email Service (services/emailService.js)} \dotfill 20
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.21}{4.3.5 Admin Route (routes/admin.js)} \dotfill 21
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.21}{4.4 Frontend Implementation} \dotfill 21
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.21}{4.4.1 Landing Page (index.html)} \dotfill 21
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.22}{4.4.2 Client-Side Script (script.js)} \dotfill 22
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.22}{4.4.3 Archive Page (archive_newsletters.html)} \dotfill 22
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.23}{4.5 MCP Server Integration} \dotfill 23
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.23}{4.5.1 Twitter/X MCP Server} \dotfill 23
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.23}{4.5.2 arXiv MCP Server} \dotfill 23
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.23}{4.5.3 Web Search Integration (Planned)} \dotfill 23
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.24}{4.6 Testing} \dotfill 24
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.24}{4.6.1 Testing Approach} \dotfill 24
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.24}{4.6.2 API Test Cases — Subscribe Endpoint} \dotfill 24
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.25}{4.6.3 API Test Cases — Newsletter Dispatch} \dotfill 25
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.25}{4.6.4 Frontend UI Testing} \dotfill 25
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.25}{4.7 Full Frontend HTML Implementation} \dotfill 25
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.25}{4.7.1 Complete Landing Page (index.html)} \dotfill 25
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.26}{4.7.2 Archive Page (archive_newsletters.html)} \dotfill 26
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.27}{4.8 Newsletter Route Implementation} \dotfill 27
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.27}{4.9 Development Workflow and Version Control} \dotfill 27
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.28}{4.9.1 NPM Scripts} \dotfill 28
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.28}{4.10 Environment Setup and Dependencies} \dotfill 28
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.28}{4.11 Integration Testing: End-to-End Subscription Flow} \dotfill 28
+    \end{itemize}
+  \item \hyperlink{page.31}{\textbf{CHAPTER 5: RESULTS AND DISCUSSION}} \dotfill 31
+    \begin{itemize}
+      \item \hyperlink{page.31}{5.1 System Performance Metrics} \dotfill 31
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.31}{5.2 Email Delivery Testing} \dotfill 31
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.32}{5.3 Feature Comparison with Existing Systems} \dotfill 32
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.33}{5.4 Discussion} \dotfill 33
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.33}{5.4.1 Achievements} \dotfill 33
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.33}{5.4.2 Limitations} \dotfill 33
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.34}{5.4.3 Implications} \dotfill 34
+        \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.34}{5.5 Weekly Development Progress Report} \dotfill 34
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.36}{5.6 Code Quality and Maintainability Analysis} \dotfill 36
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.36}{5.6.1 Modularity} \dotfill 36
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.36}{5.6.2 Code Reuse} \dotfill 36
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.36}{5.6.3 Readability} \dotfill 36
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.36}{5.6.4 Extensibility} \dotfill 36
+        \end{itemize}
+  \item \hyperlink{page.37}{\textbf{CHAPTER 6: CONCLUSION AND FUTURE WORK}} \dotfill 37
+    \begin{itemize}
+      \item \hyperlink{page.37}{6.1 Conclusion} \dotfill 37
+    \end{itemize}
+    \begin{itemize}
+      \item \hyperlink{page.38}{6.2 Future Work} \dotfill 38
+    \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.38}{6.2.1 Automated Scheduling with Cron Jobs} \dotfill 38
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.38}{6.2.2 Automated Content Summarization} \dotfill 38
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.38}{6.2.3 Personalization and User Preferences} \dotfill 38
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.38}{6.2.4 Authentication and Security Hardening} \dotfill 38
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.38}{6.2.5 Scalable Email Delivery} \dotfill 38
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.38}{6.2.6 Analytics Dashboard} \dotfill 38
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.39}{6.2.7 Containerization and Cloud Deployment} \dotfill 39
+        \end{itemize}
+        \begin{itemize}
+          \item \hyperlink{page.39}{6.2.8 Broader Web Search Integration} \dotfill 39
+        \end{itemize}
+  \item \hyperlink{page.40}{\textbf{REFERENCES}} \dotfill 40
+  \item \hyperlink{page.42}{\textbf{APPENDIX A: ENVIRONMENT CONFIGURATION}} \dotfill 42
+  \item \hyperlink{page.43}{\textbf{APPENDIX B: INSTALLATION AND SETUP GUIDE}} \dotfill 43
+  \item \hyperlink{page.44}{\textbf{APPENDIX C: SAMPLE NEWSLETTER HTML STRUCTURE}} \dotfill 44
+  \item \hyperlink{page.45}{\textbf{APPENDIX D: COMPLETE CSS STYLESHEET (style.css)}} \dotfill 45
+  \item \hyperlink{page.48}{\textbf{APPENDIX E: GLOSSARY OF TECHNICAL TERMS}} \dotfill 48
+  \item \hyperlink{page.50}{\textbf{STUDENT PROFILE}} \dotfill 50
+\end{itemize}

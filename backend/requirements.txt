@@ -1,27 +1,31 @@
 # ============================================================
-# Offline RAG Study Assistant — Python Dependencies
+# Offline RAG Study Assistant - Python Dependencies
 # ============================================================
 # All libraries run 100% offline after initial install/download.
 # No API keys or cloud services required.
 # ============================================================
 
 # --- PDF Processing ---------------------------------------------------
-# PyMuPDF: High-performance PDF text extraction.
-# Significantly faster and more accurate than PyPDF2 for
-# complex academic layouts, tables, and unicode characters.
-pymupdf>=1.25.0
+# pymupdf4llm: Converts PDF to structured Markdown preserving
+# headings, tables, bold terms - essential for header-based chunking.
+pymupdf4llm>=1.0.0
 
-# LangChain Community: Provides the PyMuPDFLoader wrapper that
-# returns structured Document objects with page-level metadata.
-langchain-community>=0.2.0
+# pdfplumber: Fallback parser for complex table extraction
+# when pymupdf4llm produces malformed table Markdown.
+pdfplumber>=0.10.0
+
+# --- Chunking ---------------------------------------------------------
+# LangChain Text Splitters: Provides MarkdownHeaderTextSplitter
+# for heading-aware document splitting (primary chunking pass).
+langchain-text-splitters>=0.2.0
 
 # --- Embeddings (Fully Local) -----------------------------------------
 # SentenceTransformers: Loads and runs transformer models locally.
-# We use 'all-MiniLM-L6-v2' (384-dim, 22M params, ~80MB).
+# We use 'all-mpnet-base-v2' (768-dim, 110M params, ~420MB).
 sentence-transformers>=3.0.0
 
 # PyTorch: Required backend for SentenceTransformers inference.
-# CPU-only is sufficient for our embedding dimensions.
+# CUDA-enabled for GPU acceleration on RTX 2050.
 torch>=2.0.0
 
 # --- Vector Database ---------------------------------------------------
@@ -30,11 +34,15 @@ torch>=2.0.0
 chromadb>=0.5.0
 
 # --- NLP Utilities -----------------------------------------------------
-# NLTK: Used exclusively for sentence tokenization in the
-# semantic chunker (punkt_tab tokenizer).
+# NLTK: Used for sentence tokenization in the semantic chunker
+# (punkt_tab tokenizer) - Pass 2 of the hybrid chunking pipeline.
 nltk>=3.8.0
 
 # --- Developer Experience ----------------------------------------------
-# Rich: Beautiful console output — progress bars, tables,
+# Rich: Beautiful console output - progress bars, tables,
 # syntax highlighting for the pipeline_runner.
 rich>=13.0.0
+
+# --- Testing -----------------------------------------------------------
+pytest>=8.0.0
+

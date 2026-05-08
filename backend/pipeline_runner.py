@@ -3,8 +3,8 @@ pipeline_runner.py — End-to-End Integration Test
 ==================================================
 
 Proves the entire RAG pipeline works by executing every stage
-sequentially: PDF loading → cleaning → semantic chunking →
-embedding & storage → retrieval (all 3 modes).
+sequentially: PDF loading -> cleaning -> semantic chunking ->
+embedding & storage -> retrieval (all 3 modes).
 
 Outputs a rich, formatted console report with timing, statistics,
 and retrieval results.
@@ -186,7 +186,7 @@ def run_pipeline(fresh: bool = False) -> None:
 
     _print_stats_table(console, "Cleaning Results", [
         ("Pages retained", f"{len(cleaned_documents)}/{len(raw_documents)}"),
-        ("Characters", f"{raw_chars:,} → {clean_chars:,}"),
+        ("Characters", f"{raw_chars:,} -> {clean_chars:,}"),
         ("Noise removed", f"{reduction:.1f}%"),
         ("Time", f"{timings['cleaning']:.2f}s"),
     ])
@@ -339,7 +339,7 @@ def run_pipeline(fresh: bool = False) -> None:
         ("Model Loading", f"{timings['model_load']:.2f}s"),
         ("Semantic Chunking", f"{timings['chunking']:.2f}s"),
         ("Vector Storage", f"{timings['storage']:.2f}s"),
-        ("─" * 20, "─" * 10),
+        ("-" * 20, "-" * 10),
         ("Total Pipeline", f"{total_time:.2f}s"),
     ])
 

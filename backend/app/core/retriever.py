@@ -1,43 +1,3 @@
-"""
-retriever.py — Advanced Retrieval with MMR & Threshold Filtering
-==================================================================
-
-Goes beyond basic Top-K retrieval to provide three search modes:
-
-1. Top-K Similarity:
-   Return the K chunks with highest cosine similarity to the query.
-   Simple, fast, but prone to redundancy.
-
-2. Threshold-Filtered:
-   Return ALL chunks above a minimum similarity score, regardless
-   of count. Useful when you don't know how many relevant chunks exist.
-
-3. Maximum Marginal Relevance (MMR):
-   The advanced mode. Balances relevance and diversity to ensure the
-   retrieved context covers different aspects of the query.
-
-MMR Formula:
-    MMR(q, D, S) = argmax_{d_i ∈ D\\S} [
-        λ · sim(q, d_i)  -  (1-λ) · max_{d_j ∈ S} sim(d_i, d_j)
-    ]
-
-    Where:
-        q = query embedding
-        D = candidate set (initial top-K retrieval)
-        S = already selected results
-        λ = trade-off parameter (0 = pure diversity, 1 = pure relevance)
-
-    Intuition: Each next result is chosen to be BOTH relevant to the
-    query AND different from what we've already selected. This prevents
-    the common failure mode where top-5 results all come from the same
-    paragraph with slightly different overlapping windows.
-
-Usage:
-    from app.core.retriever import AdvancedRetriever
-
-    retriever = AdvancedRetriever(vector_store, embedding_engine)
-    results = retriever.retrieve("what is virtual memory?", mode="mmr")
-"""
 
 from __future__ import annotations
 
@@ -148,9 +108,9 @@ class AdvancedRetriever:
         Raises:
             ValueError: If an unknown retrieval mode is specified.
         """
-        top_k = top_k or settings.retriever.top_k
-        threshold = threshold if threshold is not None else settings.retriever.similarity_threshold
-        mmr_lambda = mmr_lambda if mmr_lambda is not None else settings.retriever.mmr_lambda
+        top_k = top_k or getattr(settings, "TOP_K_CHUNKS", 8)
+        threshold = threshold if threshold is not None else 0.5
+        mmr_lambda = mmr_lambda if mmr_lambda is not None else 0.7
 
         # Validate mode
         try:
@@ -191,7 +151,7 @@ class AdvancedRetriever:
         else:
             results = []
 
-        logger.info(f"  → {len(results)} result(s) returned")
+        logger.info(f"  -> {len(results)} result(s) returned")
         return results
 
     # ── Strategy: Top-K ──────────────────────────────────────────────
@@ -236,7 +196,7 @@ class AdvancedRetriever:
         """
         # Fetch more candidates to ensure we find all above threshold
         candidate_count = min(
-            settings.retriever.mmr_candidate_count,
+            30,
             self._store.count,
         )
         if candidate_count == 0:
@@ -249,6 +209,12 @@ class AdvancedRetriever:
         )
 
         parsed = self._parse_chroma_results(raw_results)
+
+        # Log the top 3 raw scores before filtering so we can see them even if they fail the threshold
+        logger.info(f"--- Raw Similarity Scores for '{query}' ---")
+        for i, r in enumerate(parsed[:3]):
+            logger.info(f"Candidate {i+1}: {r.score:.4f}")
+        logger.info(f"---------------------------------------")
 
         # Filter by threshold
         filtered = [r for r in parsed if r.score >= threshold]
@@ -302,7 +268,7 @@ class AdvancedRetriever:
 
         # ── Step 2: Fetch candidate set ──────────────────────────────
         candidate_count = min(
-            settings.retriever.mmr_candidate_count,
+            30,
             self._store.count,
         )
         if candidate_count == 0:
@@ -371,7 +337,7 @@ class AdvancedRetriever:
                     )
                     max_inter_sim = float(np.max(inter_similarities))
                 else:
-                    # No selected results yet → no diversity penalty
+                    # No selected results yet -> no diversity penalty
                     max_inter_sim = 0.0
 
                 # ── MMR score ────────────────────────────────────────
@@ -432,7 +398,7 @@ class AdvancedRetriever:
         for rank, (doc_id, text, meta, dist) in enumerate(
             zip(ids, documents, metadatas, distances), start=1
         ):
-            similarity = 1.0 - dist  # Convert distance → similarity
+            similarity = 1.0 - dist  # Convert distance -> similarity
 
             results.append(RetrievalResult(
                 text=text,

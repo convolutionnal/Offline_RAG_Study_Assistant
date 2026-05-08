@@ -1,0 +1,246 @@
+\tableofcontents
+\begin{itemize}
+    \item \hyperlink{page.i}{\textbf{Declaration by the Student}} \dotfill i
+    \item \hyperlink{page.ii}{\textbf{CERTIFICATE}} \dotfill ii
+    \item \hyperlink{page.iii}{\textbf{Acknowledgement}} \dotfill iii
+    \item \hyperlink{page.iv}{\textbf{ABSTRACT}} \dotfill iv
+    \item \hyperlink{page.v}{\textbf{LIST OF FIGURES}} \dotfill v
+    \item \hyperlink{page.vi}{\textbf{LIST OF TABLES}} \dotfill vi
+    \item \hyperlink{page.i}{\textbf{DECLARATION BY THE STUDENT        i}} \dotfill i
+    \item \hyperlink{page.ii}{\textbf{CERTIFICATE        ii}} \dotfill ii
+    \item \hyperlink{page.iii}{\textbf{ACKNOWLEDGEMENT        iii}} \dotfill iii
+    \item \hyperlink{page.iv}{\textbf{ABSTRACT        iv}} \dotfill iv
+    \item \hyperlink{page.v}{\textbf{LIST OF FIGURES        v}} \dotfill v
+    \item \hyperlink{page.vi}{\textbf{LIST OF TABLES        vi}} \dotfill vi
+    \item \hyperlink{page.vii}{\textbf{LIST OF ABBREVIATIONS AND ACRONYMS        vii}} \dotfill vii
+    \item \hyperlink{page.1}{\textbf{CHAPTER 1: INTRODUCTION        1}} \dotfill 1
+    \begin{itemize}
+        \item \hyperlink{page.1}{1.1 Background of the Study        1} \dotfill 1
+        \item \hyperlink{page.2}{1.2 Problem Statement        2} \dotfill 2
+        \item \hyperlink{page.2}{1.3 Objectives        2} \dotfill 2
+        \item \hyperlink{page.2}{1.4 Scope of the Project        2} \dotfill 2
+        \item \hyperlink{page.3}{1.5 Organization of the Report        3} \dotfill 3
+    \end{itemize}
+    \item \hyperlink{page.4}{\textbf{CHAPTER 2: LITERATURE REVIEW AND BACKGROUND WORK        4}} \dotfill 4
+    \begin{itemize}
+        \item \hyperlink{page.4}{2.1 Existing Systems and Related Work        4} \dotfill 4
+        \item \hyperlink{page.9}{2.1 Existing Systems / Work         9} \dotfill 9
+        \begin{itemize}
+            \item \hyperlink{page.10}{2.1.2 Automated Content Aggregation Systems        10} \dotfill 10
+            \item \hyperlink{page.11}{2.1.3 Newsletter Platforms and Email Marketing Tools        11} \dotfill 11
+            \item \hyperlink{page.12}{2.1.4 Academic Work on Automated Newsletter Generation        12} \dotfill 12
+            \item \hyperlink{page.13}{2.1.5 Model Context Protocol (MCP) and AI Agent Tooling        13} \dotfill 13
+            \item \hyperlink{page.13}{2.1.6 Email Delivery Systems and Nodemailer        13} \dotfill 13
+        \end{itemize}
+        \item \hyperlink{page.14}{2.2 Comparative Analysis of Existing Work        14} \dotfill 14
+        \item \hyperlink{page.16}{2.3 Limitations of Existing Work        16} \dotfill 16
+        \item \hyperlink{page.17}{2.4 Need for the Proposed System        17} \dotfill 17
+    \end{itemize}
+    \item \hyperlink{page.19}{\textbf{CHAPTER 3: SYSTEM ANALYSIS AND DESIGN        19}} \dotfill 19
+    \begin{itemize}
+        \item \hyperlink{page.19}{3.1 System Architecture        19} \dotfill 19
+        \begin{itemize}
+            \item \hyperlink{page.20}{3.1.1 Presentation Tier (Frontend)        20} \dotfill 20
+            \item \hyperlink{page.20}{3.1.2 Logic Tier (Backend)        20} \dotfill 20
+            \item \hyperlink{page.21}{3.1.3 Data Tier (MongoDB)        21} \dotfill 21
+            \item \hyperlink{page.21}{3.1.4 MCP Content Sourcing Layer        21} \dotfill 21
+        \end{itemize}
+        \item \hyperlink{page.23}{3.2 Database Design        23} \dotfill 23
+        \item \hyperlink{page.26}{3.3 UML Diagrams        26} \dotfill 26
+        \begin{itemize}
+            \item \hyperlink{page.28}{3.3.1 Use Case Diagram        28} \dotfill 28
+            \item \hyperlink{page.29}{3.3.2 Sequence Diagram — Subscription Workflow        29} \dotfill 29
+            \item \hyperlink{page.30}{3.3.3 Sequence Diagram — Newsletter Dispatch Workflow        30} \dotfill 30
+            \item \hyperlink{page.32}{3.3.4 Data Flow Diagram (Level 0 — Context Diagram)        32} \dotfill 32
+            \item \hyperlink{page.33}{3.3.5 Data Flow Diagram (Level 1)        33} \dotfill 33
+        \end{itemize}
+        \item \hyperlink{page.34}{3.4 REST API Design        34} \dotfill 34
+        \begin{itemize}
+            \item \hyperlink{page.34}{3.4.1 POST /api/subscribe — Request and Response        34} \dotfill 34
+            \item \hyperlink{page.35}{3.4.2 POST /api/unsubscribe — Request and Response        35} \dotfill 35
+        \end{itemize}
+        \item \hyperlink{page.36}{3.5 CSS Architecture and Frontend Styling Strategy        36} \dotfill 36
+        \begin{itemize}
+            \item \hyperlink{page.36}{3.5.1 CSS Custom Properties (Design Tokens)        36} \dotfill 36
+            \item \hyperlink{page.37}{3.5.2 Responsive Layout        37} \dotfill 37
+        \end{itemize}
+    \end{itemize}
+    \item \hyperlink{page.43}{\textbf{CHAPTER 4: IMPLEMENTATION AND TESTING        43}} \dotfill 43
+    \begin{itemize}
+        \item \hyperlink{page.43}{4.1 Tools and Technologies Used        43} \dotfill 43
+        \item \hyperlink{page.45}{4.2 Project Directory Structure        45} \dotfill 45
+        \item \hyperlink{page.48}{4.3 Backend Implementation        48} \dotfill 48
+        \begin{itemize}
+            \item \hyperlink{page.48}{4.3.1 Server Entry Point (server.js)        48} \dotfill 48
+            \item \hyperlink{page.50}{4.3.2 Subscriber Schema (models/Subscriber.js)        50} \dotfill 50
+            \item \hyperlink{page.52}{4.3.3 Subscription Route Handler (routes/subscribe.js)        52} \dotfill 52
+            \item \hyperlink{page.55}{4.3.4 Email Service (services/emailService.js)        55} \dotfill 55
+            \item \hyperlink{page.57}{4.3.5 Admin Route (routes/admin.js)        57} \dotfill 57
+        \end{itemize}
+        \item \hyperlink{page.58}{4.4 Frontend Implementation        58} \dotfill 58
+        \begin{itemize}
+            \item \hyperlink{page.58}{4.4.1 Landing Page (index.html)        58} \dotfill 58
+            \item \hyperlink{page.59}{4.4.2 Client-Side Script (script.js)        59} \dotfill 59
+            \item \hyperlink{page.61}{4.4.3 Archive Page (archive\_newsletters.html)        61} \dotfill 61
+        \end{itemize}
+        \item \hyperlink{page.62}{4.5 MCP Server Integration        62} \dotfill 62
+        \begin{itemize}
+            \item \hyperlink{page.62}{4.5.1 Twitter/X MCP Server        62} \dotfill 62
+            \item \hyperlink{page.63}{4.5.2 arXiv MCP Server        63} \dotfill 63
+            \item \hyperlink{page.63}{4.5.3 Web Search Integration (Planned)        63} \dotfill 63
+        \end{itemize}
+        \item \hyperlink{page.64}{4.6 Testing        64} \dotfill 64
+        \begin{itemize}
+            \item \hyperlink{page.64}{4.6.1 Testing Approach        64} \dotfill 64
+            \item \hyperlink{page.65}{4.6.2 API Test Cases — Subscribe Endpoint        65} \dotfill 65
+            \item \hyperlink{page.66}{4.6.3 API Test Cases — Newsletter Dispatch        66} \dotfill 66
+            \item \hyperlink{page.67}{4.6.4 Frontend UI Testing        67} \dotfill 67
+        \end{itemize}
+        \item \hyperlink{page.68}{4.7 Full Frontend HTML Implementation        68} \dotfill 68
+        \begin{itemize}
+            \item \hyperlink{page.68}{4.7.1 Complete Landing Page (index.html)        68} \dotfill 68
+            \item \hyperlink{page.71}{4.7.2 Archive Page (archive\_newsletters.html)        71} \dotfill 71
+        \end{itemize}
+        \item \hyperlink{page.75}{4.8 Newsletter Route Implementation        75} \dotfill 75
+        \item \hyperlink{page.77}{4.9 Development Workflow and Version Control        77} \dotfill 77
+        \begin{itemize}
+            \item \hyperlink{page.78}{4.9.1 NPM Scripts        78} \dotfill 78
+        \end{itemize}
+        \item \hyperlink{page.79}{4.10 Environment Setup and Dependencies        79} \dotfill 79
+        \item \hyperlink{page.81}{4.11 Integration Testing: End-to-End Subscription Flow        81} \dotfill 81
+    \end{itemize}
+    \item \hyperlink{page.84}{\textbf{CHAPTER 5: RESULTS AND DISCUSSION        84}} \dotfill 84
+    \begin{itemize}
+        \item \hyperlink{page.84}{5.1 System Performance Metrics        84} \dotfill 84
+        \item \hyperlink{page.86}{5.2 Email Delivery Testing        86} \dotfill 86
+        \item \hyperlink{page.87}{5.3 Feature Comparison with Existing Systems        87} \dotfill 87
+        \item \hyperlink{page.89}{5.4 Discussion        89} \dotfill 89
+        \begin{itemize}
+            \item \hyperlink{page.89}{5.4.1 Achievements        89} \dotfill 89
+            \item \hyperlink{page.90}{5.4.2 Limitations        90} \dotfill 90
+            \item \hyperlink{page.91}{5.4.3 Implications        91} \dotfill 91
+        \end{itemize}
+        \item \hyperlink{page.92}{5.5 Weekly Development Progress Report        92} \dotfill 92
+        \item \hyperlink{page.94}{5.6 Code Quality and Maintainability Analysis        94} \dotfill 94
+        \begin{itemize}
+            \item \hyperlink{page.94}{5.6.1 Modularity        94} \dotfill 94
+            \item \hyperlink{page.95}{5.6.2 Code Reuse        95} \dotfill 95
+            \item \hyperlink{page.95}{5.6.3 Readability        95} \dotfill 95
+            \item \hyperlink{page.96}{5.6.4 Extensibility        96} \dotfill 96
+        \end{itemize}
+    \end{itemize}
+    \item \hyperlink{page.97}{\textbf{CHAPTER 6: CONCLUSION AND FUTURE WORK        97}} \dotfill 97
+    \begin{itemize}
+        \item \hyperlink{page.97}{6.1 Conclusion        97} \dotfill 97
+        \item \hyperlink{page.100}{6.2 Future Work        100} \dotfill 100
+        \begin{itemize}
+            \item \hyperlink{page.100}{6.2.1 Automated Scheduling with Cron Jobs        100} \dotfill 100
+            \item \hyperlink{page.101}{6.2.2 Automated Content Summarization        101} \dotfill 101
+            \item \hyperlink{page.101}{6.2.3 Personalization and User Preferences        101} \dotfill 101
+            \item \hyperlink{page.102}{6.2.4 Authentication and Security Hardening        102} \dotfill 102
+            \item \hyperlink{page.102}{6.2.5 Scalable Email Delivery        102} \dotfill 102
+            \item \hyperlink{page.103}{6.2.6 Analytics Dashboard        103} \dotfill 103
+            \item \hyperlink{page.103}{6.2.7 Containerization and Cloud Deployment        103} \dotfill 103
+            \item \hyperlink{page.104}{6.2.8 Broader Web Search Integration        104} \dotfill 104
+        \end{itemize}
+    \end{itemize}
+    \item \hyperlink{page.104}{\textbf{REFERENCES        105}} \dotfill 104
+    \item \hyperlink{page.104}{\textbf{APPENDIX A: ENVIRONMENT CONFIGURATION        108}} \dotfill 104
+    \item \hyperlink{page.104}{\textbf{APPENDIX B: INSTALLATION AND SETUP GUIDE        109}} \dotfill 104
+    \item \hyperlink{page.104}{\textbf{APPENDIX C: SAMPLE NEWSLETTER HTML STRUCTURE        111}} \dotfill 104
+    \item \hyperlink{page.104}{\textbf{APPENDIX D: COMPLETE CSS STYLESHEET        113}} \dotfill 104
+    \item \hyperlink{page.104}{\textbf{APPENDIX E: GLOSSARY OF TECHNICAL TERMS        116}} \dotfill 104
+    \item \hyperlink{page.104}{\textbf{STUDENT PROFILE        119}} \dotfill 104
+    \item \hyperlink{page.1}{\textbf{Chapter 1: Introduction}} \dotfill 1
+    \begin{itemize}
+        \item \hyperlink{page.1}{1.1 Background of the Study} \dotfill 1
+        \item \hyperlink{page.2}{1.2 Problem Statement} \dotfill 2
+        \item \hyperlink{page.2}{1.3 Objectives} \dotfill 2
+        \item \hyperlink{page.2}{1.4 Scope of the Project} \dotfill 2
+        \item \hyperlink{page.3}{1.5 Organization of the Report} \dotfill 3
+    \end{itemize}
+    \item \hyperlink{page.1}{\textbf{Chapter 1: Introduction — Provides the background, problem statement, objectives, and scope of the project.}} \dotfill 1
+    \item \hyperlink{page.1}{\textbf{Chapter 2: Literature Review — Reviews existing quiz generation systems, RAG techniques, and local LLM tools.}} \dotfill 1
+    \item \hyperlink{page.19}{\textbf{Chapter 3: System Analysis and Design — Describes the system architecture, pipeline design methodology, and data flow.}} \dotfill 19
+    \item \hyperlink{page.43}{\textbf{Chapter 4: Implementation and Testing — Details tools used, implementation of each pipeline stage, and testing methodology.}} \dotfill 43
+    \item \hyperlink{page.84}{\textbf{Chapter 5: Results and Discussion — Presents performance results and comparative analysis.}} \dotfill 84
+    \item \hyperlink{page.97}{\textbf{Chapter 6: Conclusion and Future Work — Summarizes achievements and proposes future enhancements.}} \dotfill 97
+    \item \hyperlink{page.97}{\textbf{Chapter 2: Literature Review / Background Work}} \dotfill 97
+    \begin{itemize}
+        \item \hyperlink{page.9}{2.1 Existing Systems / Work} \dotfill 9
+        \item \hyperlink{page.9}{2.2 Limitations of Existing Work} \dotfill 9
+        \item \hyperlink{page.9}{2.3 Needs for Proposed System} \dotfill 9
+    \end{itemize}
+    \item \hyperlink{page.19}{\textbf{Chapter 3: System Analysis and Design}} \dotfill 19
+    \begin{itemize}
+        \item \hyperlink{page.19}{3.1 System Architecture} \dotfill 19
+        \begin{itemize}
+            \item \hyperlink{page.19}{3.1.1 High-Level Architecture Overview} \dotfill 19
+            \item \hyperlink{page.19}{3.1.2 Indexing Phase} \dotfill 19
+            \item \hyperlink{page.19}{3.1.3 Querying Phase} \dotfill 19
+            \item \hyperlink{page.19}{3.1.4 Backend Architecture} \dotfill 19
+            \item \hyperlink{page.19}{3.1.5 Frontend Architecture} \dotfill 19
+            \item \hyperlink{page.19}{3.1.6 System Design Summary} \dotfill 19
+        \end{itemize}
+        \item \hyperlink{page.19}{3.2 Design Methodology} \dotfill 19
+        \begin{itemize}
+            \item \hyperlink{page.19}{3.2.1 Requirement Analysis} \dotfill 19
+            \item \hyperlink{page.19}{3.2.2 RAG-Based Design Approach} \dotfill 19
+            \item \hyperlink{page.19}{3.2.3 PDF Parsing Strategy} \dotfill 19
+            \item \hyperlink{page.19}{3.2.4 Hybrid Chunking Strategy} \dotfill 19
+            \item \hyperlink{page.19}{3.2.5 Embedding Model Selection} \dotfill 19
+            \item \hyperlink{page.19}{3.2.6 Vector Database Design} \dotfill 19
+            \item \hyperlink{page.19}{3.2.7 Language Model Selection} \dotfill 19
+            \item \hyperlink{page.19}{3.2.8 Prompt Design and Validation} \dotfill 19
+            \item \hyperlink{page.19}{3.2.9 Backend Design} \dotfill 19
+            \item \hyperlink{page.19}{3.2.10 Frontend Design} \dotfill 19
+            \item \hyperlink{page.19}{3.2.11 Summary} \dotfill 19
+            \item \hyperlink{page.19}{3.3.1 Data Flow — Indexing Phase} \dotfill 19
+            \item \hyperlink{page.19}{3.3.2 Data Flow — Querying Phase} \dotfill 19
+            \item \hyperlink{page.19}{3.3.3 System Architecture Overview} \dotfill 19
+            \item \hyperlink{page.19}{3.3.4 Sequence of Interaction} \dotfill 19
+            \item \hyperlink{page.19}{3.3.5 Design Observations} \dotfill 19
+        \end{itemize}
+    \end{itemize}
+    \item \hyperlink{page.43}{\textbf{Chapter 4: Implementation and Testing}} \dotfill 43
+    \begin{itemize}
+        \item \hyperlink{page.43}{4.1 Tools and Technologies Used} \dotfill 43
+        \item \hyperlink{page.43}{4.2 Implementation Methodology} \dotfill 43
+        \begin{itemize}
+            \item \hyperlink{page.43}{4.2.1 Stage 1: Structured PDF Parsing} \dotfill 43
+            \item \hyperlink{page.43}{4.2.2 Stage 2: Text Cleaning} \dotfill 43
+            \item \hyperlink{page.43}{4.2.3 Stage 3: Hybrid Chunking} \dotfill 43
+            \item \hyperlink{page.43}{4.2.4 Stage 4: Embedding and Vector Storage} \dotfill 43
+            \item \hyperlink{page.43}{4.2.5 Stage 5: Quiz Generation} \dotfill 43
+            \item \hyperlink{page.43}{4.2.6 Implementation Summary} \dotfill 43
+        \end{itemize}
+        \item \hyperlink{page.43}{4.3 Testing Methods} \dotfill 43
+        \begin{itemize}
+            \item \hyperlink{page.43}{4.3.1 Query Validation and Threshold Testing} \dotfill 43
+            \item \hyperlink{page.43}{4.3.2 Test Results} \dotfill 43
+            \item \hyperlink{page.43}{4.3.3 Discussion} \dotfill 43
+        \end{itemize}
+        \item \hyperlink{page.43}{4.4 Test Results} \dotfill 43
+        \begin{itemize}
+            \item \hyperlink{page.43}{4.4.1 Retrieval Quality and Query Behavior} \dotfill 43
+            \item \hyperlink{page.43}{4.4.2 Effectiveness of Similarity Threshold} \dotfill 43
+            \item \hyperlink{page.43}{4.4.3 System Behavior Under Invalid Inputs} \dotfill 43
+            \item \hyperlink{page.43}{4.4.4 Overall System Performance} \dotfill 43
+            \item \hyperlink{page.43}{4.4.5 Discussion} \dotfill 43
+        \end{itemize}
+    \end{itemize}
+    \item \hyperlink{page.84}{\textbf{Chapter 5: Results and Discussion}} \dotfill 84
+    \begin{itemize}
+        \item \hyperlink{page.84}{5.1 Results Analysis} \dotfill 84
+        \item \hyperlink{page.84}{5.3 Performance Evaluation} \dotfill 84
+        \item \hyperlink{page.84}{69.4 seconds} \dotfill 84
+        \item \hyperlink{page.84}{0.07 seconds} \dotfill 84
+        \item \hyperlink{page.89}{5.4 Discussion} \dotfill 89
+    \end{itemize}
+    \item \hyperlink{page.97}{\textbf{Chapter 6: Conclusion and Future Work}} \dotfill 97
+    \begin{itemize}
+        \item \hyperlink{page.97}{6.1 Conclusion} \dotfill 97
+        \item \hyperlink{page.97}{6.2 Future Scope} \dotfill 97
+        \item \hyperlink{page.97}{6.3 Final Remarks} \dotfill 97
+    \end{itemize}
+\end{itemize}

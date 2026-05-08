@@ -1,0 +1,100 @@
+\begin{itemize}
+    \item \hyperlink{page.i}{\textbf{Declaration by the Student}} \dotfill i
+    \item \hyperlink{page.ii}{\textbf{CERTIFICATE}} \dotfill ii
+    \item \hyperlink{page.iii}{\textbf{Acknowledgement}} \dotfill iii
+    \item \hyperlink{page.iv}{\textbf{ABSTRACT}} \dotfill iv
+    \item \hyperlink{page.v}{\textbf{LIST OF FIGURES}} \dotfill v
+    \item \hyperlink{page.vi}{\textbf{LIST OF TABLES}} \dotfill vi
+    \item \hyperlink{page.1}{\textbf{Chapter 1: Introduction}} \dotfill 1
+    \begin{itemize}
+        \item \hyperlink{page.1}{1.1 Background of the Study} \dotfill 1
+        \item \hyperlink{page.2}{1.2 Problem Statement} \dotfill 2
+        \item \hyperlink{page.2}{1.3 Objectives} \dotfill 2
+        \item \hyperlink{page.2}{1.4 Scope of the Project} \dotfill 2
+        \item \hyperlink{page.3}{1.5 Organization of the Report} \dotfill 3
+    \end{itemize}
+    \item \hyperlink{page.1}{\textbf{Chapter 1: Introduction — Provides the background, problem statement, objectives, and scope of the project.}} \dotfill 1
+    \item \hyperlink{page.1}{\textbf{Chapter 2: Literature Review — Reviews existing quiz generation systems, RAG techniques, and local LLM tools.}} \dotfill 1
+    \item \hyperlink{page.19}{\textbf{Chapter 3: System Analysis and Design — Describes the system architecture, pipeline design methodology, and data flow.}} \dotfill 19
+    \item \hyperlink{page.43}{\textbf{Chapter 4: Implementation and Testing — Details tools used, implementation of each pipeline stage, and testing methodology.}} \dotfill 43
+    \item \hyperlink{page.84}{\textbf{Chapter 5: Results and Discussion — Presents performance results and comparative analysis.}} \dotfill 84
+    \item \hyperlink{page.97}{\textbf{Chapter 6: Conclusion and Future Work — Summarizes achievements and proposes future enhancements.}} \dotfill 97
+    \item \hyperlink{page.97}{\textbf{Chapter 2: Literature Review / Background Work}} \dotfill 97
+    \begin{itemize}
+        \item \hyperlink{page.9}{2.1 Existing Systems / Work} \dotfill 9
+        \item \hyperlink{page.9}{2.2 Limitations of Existing Work} \dotfill 9
+        \item \hyperlink{page.9}{2.3 Needs for Proposed System} \dotfill 9
+    \end{itemize}
+    \item \hyperlink{page.19}{\textbf{Chapter 3: System Analysis and Design}} \dotfill 19
+    \begin{itemize}
+        \item \hyperlink{page.19}{3.1 System Architecture} \dotfill 19
+        \begin{itemize}
+            \item \hyperlink{page.19}{3.1.1 High-Level Architecture Overview} \dotfill 19
+            \item \hyperlink{page.19}{3.1.2 Indexing Phase} \dotfill 19
+            \item \hyperlink{page.19}{3.1.3 Querying Phase} \dotfill 19
+            \item \hyperlink{page.19}{3.1.4 Backend Architecture} \dotfill 19
+            \item \hyperlink{page.19}{3.1.5 Frontend Architecture} \dotfill 19
+            \item \hyperlink{page.19}{3.1.6 System Design Summary} \dotfill 19
+        \end{itemize}
+        \item \hyperlink{page.19}{3.2 Design Methodology} \dotfill 19
+        \begin{itemize}
+            \item \hyperlink{page.19}{3.2.1 Requirement Analysis} \dotfill 19
+            \item \hyperlink{page.19}{3.2.2 RAG-Based Design Approach} \dotfill 19
+            \item \hyperlink{page.19}{3.2.3 PDF Parsing Strategy} \dotfill 19
+            \item \hyperlink{page.19}{3.2.4 Hybrid Chunking Strategy} \dotfill 19
+            \item \hyperlink{page.19}{3.2.5 Embedding Model Selection} \dotfill 19
+            \item \hyperlink{page.19}{3.2.6 Vector Database Design} \dotfill 19
+            \item \hyperlink{page.19}{3.2.7 Language Model Selection} \dotfill 19
+            \item \hyperlink{page.19}{3.2.8 Prompt Design and Validation} \dotfill 19
+            \item \hyperlink{page.19}{3.2.9 Backend Design} \dotfill 19
+            \item \hyperlink{page.19}{3.2.10 Frontend Design} \dotfill 19
+            \item \hyperlink{page.19}{3.2.11 Summary} \dotfill 19
+            \item \hyperlink{page.19}{3.3.1 Data Flow — Indexing Phase} \dotfill 19
+            \item \hyperlink{page.19}{3.3.2 Data Flow — Querying Phase} \dotfill 19
+            \item \hyperlink{page.19}{3.3.3 System Architecture Overview} \dotfill 19
+            \item \hyperlink{page.19}{3.3.4 Sequence of Interaction} \dotfill 19
+            \item \hyperlink{page.19}{3.3.5 Design Observations} \dotfill 19
+        \end{itemize}
+    \end{itemize}
+    \item \hyperlink{page.43}{\textbf{Chapter 4: Implementation and Testing}} \dotfill 43
+    \begin{itemize}
+        \item \hyperlink{page.43}{4.1 Tools and Technologies Used} \dotfill 43
+        \item \hyperlink{page.43}{4.2 Implementation Methodology} \dotfill 43
+        \begin{itemize}
+            \item \hyperlink{page.43}{4.2.1 Stage 1: Structured PDF Parsing} \dotfill 43
+            \item \hyperlink{page.43}{4.2.2 Stage 2: Text Cleaning} \dotfill 43
+            \item \hyperlink{page.43}{4.2.3 Stage 3: Hybrid Chunking} \dotfill 43
+            \item \hyperlink{page.43}{4.2.4 Stage 4: Embedding and Vector Storage} \dotfill 43
+            \item \hyperlink{page.43}{4.2.5 Stage 5: Quiz Generation} \dotfill 43
+            \item \hyperlink{page.43}{4.2.6 Implementation Summary} \dotfill 43
+        \end{itemize}
+        \item \hyperlink{page.43}{4.3 Testing Methods} \dotfill 43
+        \begin{itemize}
+            \item \hyperlink{page.43}{4.3.1 Query Validation and Threshold Testing} \dotfill 43
+            \item \hyperlink{page.43}{4.3.2 Test Results} \dotfill 43
+            \item \hyperlink{page.43}{4.3.3 Discussion} \dotfill 43
+        \end{itemize}
+        \item \hyperlink{page.43}{4.4 Test Results} \dotfill 43
+        \begin{itemize}
+            \item \hyperlink{page.43}{4.4.1 Retrieval Quality and Query Behavior} \dotfill 43
+            \item \hyperlink{page.43}{4.4.2 Effectiveness of Similarity Threshold} \dotfill 43
+            \item \hyperlink{page.43}{4.4.3 System Behavior Under Invalid Inputs} \dotfill 43
+            \item \hyperlink{page.43}{4.4.4 Overall System Performance} \dotfill 43
+            \item \hyperlink{page.43}{4.4.5 Discussion} \dotfill 43
+        \end{itemize}
+    \end{itemize}
+    \item \hyperlink{page.84}{\textbf{Chapter 5: Results and Discussion}} \dotfill 84
+    \begin{itemize}
+        \item \hyperlink{page.84}{5.1 Results Analysis} \dotfill 84
+        \item \hyperlink{page.84}{5.3 Performance Evaluation} \dotfill 84
+        \item \hyperlink{page.84}{69.4 seconds} \dotfill 84
+        \item \hyperlink{page.84}{0.07 seconds} \dotfill 84
+        \item \hyperlink{page.89}{5.4 Discussion} \dotfill 89
+    \end{itemize}
+    \item \hyperlink{page.97}{\textbf{Chapter 6: Conclusion and Future Work}} \dotfill 97
+    \begin{itemize}
+        \item \hyperlink{page.97}{6.1 Conclusion} \dotfill 97
+        \item \hyperlink{page.97}{6.2 Future Scope} \dotfill 97
+        \item \hyperlink{page.97}{6.3 Final Remarks} \dotfill 97
+    \end{itemize}
+\end{itemize}

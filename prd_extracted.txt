@@ -1,0 +1,507 @@
+PRODUCT REQUIREMENTS DOCUMENT
+Offline RAG-Powered
+Quiz Generator
+Upload Any PDF. Retrieve Precisely. Generate Grounded MCQs. No Cloud. No Cost.
+ 
+
+
+1. Project Overview
+1.1  Vision
+A fully offline, privacy-first tool that takes any academic PDF — OS notes, DBMS slides, networking docs — builds a robust RAG pipeline on top of it, and generates grounded Multiple Choice Questions using a locally-running LLM. Zero cloud dependency. Zero API costs.
+
+1.2  Problem Statement
+Students preparing for exams face a wall of long, dense PDFs. Manually creating quiz questions is slow and inconsistent. Existing AI quiz tools either require internet connectivity, charge per query, or hallucinate content not actually in the source document. The goal is to solve all three problems at once.
+
+1.3  Hard Constraints
+
+
+2. Pre-Requisites — What To Download Before Building
+⚠  The agent must verify ALL of these are installed before writing a single line of application code.
+
+2.1  System-Level Installs (Do Once)
+A. Ollama (Local LLM Runtime)
+Download installer from https://ollama.ai  — available for Windows, Mac, Linux
+Install and start the Ollama service (runs at http://localhost:11434 by default)
+Pull the primary model:    ollama pull llama3.1:8b
+Pull the backup model:     ollama pull mistral:7b
+Verify:    curl http://localhost:11434/api/tags   — should return JSON listing both models
+
+B. Node.js (for any tooling scripts — optional but recommended)
+Download Node.js 18+ LTS from https://nodejs.org
+Verify:    node --version
+
+C. Git (for version control)
+Install Git from https://git-scm.com
+Configure:    git config --global user.email your@github-email.com
+CRITICAL: email must match GitHub account or commits won't count as contributions
+
+2.2  Python Environment (conda env: E:\AI\rag_env)
+⚠  All packages must be installed into E:\AI\rag_env, NOT the system Python. Verify kernel before every session: import sys; print(sys.executable) — must print E:\AI\rag_env\python.exe
+
+Python Packages — Install in Order
+
+2.3  Frontend (Node / React)
+cd frontend && npm create vite@latest . -- --template react
+npm install axios  — HTTP client for backend API calls
+npm install  — install all dependencies
+Verify dev server:    npm run dev   (serves on http://localhost:5173)
+
+2.4  Environment Variables (Set Before Any Code Runs)
+
+
+3. System Architecture
+3.1  Two-Phase Pipeline
+
+3.2  Full Tech Stack
+
+
+4. PDF Parsing Strategy — Research-Backed
+★  This is the most critical stage of the pipeline. Poor parsing produces garbage chunks, and garbage chunks produce hallucinated or irrelevant questions regardless of how good the LLM is.
+
+4.1  Why pymupdf4llm as Primary Parser
+Academic PDFs (lecture notes, textbooks) contain structural information — section headings, subsections, bold terms, tables — that raw text extraction destroys. pymupdf4llm converts each PDF page into structured Markdown, preserving:
+H1/H2/H3 headings from font size and weight analysis
+Bold terms (key definitions, important concepts)
+Tables rendered as Markdown tables (| col | col |)
+Code blocks and monospace sections
+Page numbers and metadata attached as structured fields
+
+This Markdown output is then fed to MarkdownHeaderTextSplitter — which is the key insight. The headers tell the splitter exactly where topic boundaries are, producing chunks that are semantically complete sections rather than arbitrary text windows.
+
+4.2  Two-Pass Parsing Pipeline
+Pass 1 — pymupdf4llm (Primary)
+import pymupdf4llm
+
+def parse_pdf_to_markdown(pdf_path: str) -> list[dict]:
+    # Returns per-page markdown with metadata
+    md_pages = pymupdf4llm.to_markdown(
+        pdf_path,
+        page_chunks=True,   # one dict per page
+        show_progress=False,
+    )
+    return md_pages  # [{text: str, metadata: {page, source, ...}}]
+
+Pass 2 — pdfplumber Fallback (for table-heavy pages)
+import pdfplumber
+
+def extract_tables_fallback(pdf_path: str, page_num: int) -> str:
+    # Called when pymupdf4llm produces malformed table markdown
+    with pdfplumber.open(pdf_path) as pdf:
+        page = pdf.pages[page_num]
+        tables = page.extract_tables()
+        return format_tables_as_markdown(tables)
+
+Quality Gate — Filter Useless Pages
+MIN_TOKENS = 40   # pages with < 40 tokens are skipped (title pages, blank pages)
+MIN_ALPHA_RATIO = 0.4  # at least 40% alphabetic chars (filters pure-number pages)
+
+def is_useful_page(page_text: str) -> bool:
+    tokens = len(page_text.split())
+    alpha = sum(c.isalpha() for c in page_text)
+    ratio = alpha / max(len(page_text), 1)
+    return tokens >= MIN_TOKENS and ratio >= MIN_ALPHA_RATIO
+
+4.3  Text Cleaning Rules (Applied After Parsing)
+
+
+5. Chunking Strategy — Hybrid Header + Token Split
+5.1  Why This Strategy Was Chosen
+Based on benchmarks and 2024-2025 RAG research, the optimal approach for academic PDFs is:
+
+
+5.2  Complete Chunking Implementation
+Step 1 — Header Split
+from langchain_text_splitters import MarkdownHeaderTextSplitter
+
+HEADERS_TO_SPLIT_ON = [
+    ("#",   "section"),
+    ("##",  "subsection"),
+    ("###", "subsubsection"),
+]
+
+def split_by_headers(markdown_text: str) -> list[dict]:
+    splitter = MarkdownHeaderTextSplitter(
+        headers_to_split_on=HEADERS_TO_SPLIT_ON,
+        strip_headers=False,  # Keep headers in chunk text
+    )
+    docs = splitter.split_text(markdown_text)
+    return docs  # Each doc has .page_content + .metadata with section names
+
+Step 2 — Token-Bounded Recursive Split
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+import tiktoken
+
+ENCODING = tiktoken.get_encoding("cl100k_base")
+MAX_TOKENS = 512
+OVERLAP_TOKENS = 50
+
+def count_tokens(text: str) -> int:
+    return len(ENCODING.encode(text))
+
+def split_to_token_limit(header_chunks: list) -> list[dict]:
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=MAX_TOKENS,
+        chunk_overlap=OVERLAP_TOKENS,
+        length_function=count_tokens,
+        separators=["\n\n", "\n", ". ", " ", ""],
+    )
+    results = []
+    for chunk in header_chunks:
+        if count_tokens(chunk.page_content) <= MAX_TOKENS:
+            results.append(chunk)
+        else:
+            sub = splitter.split_text(chunk.page_content)
+            for s in sub:
+                # Preserve parent metadata
+                results.append({"text": s, "metadata": chunk.metadata})
+    return results
+
+Step 3 — Metadata Enrichment + Context Prepending
+def build_final_chunks(token_chunks, source_file: str, page_num: int) -> list[dict]:
+    final = []
+    for i, chunk in enumerate(token_chunks):
+        meta = chunk.get("metadata", {})
+
+        # Build heading breadcrumb from metadata
+        breadcrumb_parts = []
+        for key in ["section", "subsection", "subsubsection"]:
+            if key in meta and meta[key]:
+                breadcrumb_parts.append(meta[key])
+        breadcrumb = " > ".join(breadcrumb_parts)
+
+        # Prepend breadcrumb to chunk text for embedding
+        # This dramatically improves retrieval specificity
+        text = chunk.get("text", chunk.get("page_content", ""))
+        enriched_text = f"{breadcrumb}\n{text}" if breadcrumb else text
+
+        token_count = count_tokens(enriched_text)
+        if token_count < 30:   # Quality gate: skip noise fragments
+            continue
+
+        final.append({
+            "chunk_id":    f"{source_file}:p{page_num}:c{i}",
+            "text":         enriched_text,
+            "raw_text":     text,          # original without breadcrumb
+            "source":       source_file,
+            "page_num":     page_num,
+            "section":      meta.get("section", ""),
+            "subsection":   meta.get("subsection", ""),
+            "token_count":  token_count,
+        })
+    return final
+
+5.3  Chunking Quality Summary
+
+
+6. Folder Structure & File Responsibilities
+6.1  Directory Tree
+offline-rag-quiz-generator/
+├── backend/
+│   ├── app/
+│   │   ├── main.py              # FastAPI app factory, routers, CORS, startup
+│   │   ├── config.py            # All env vars, model names, paths as Pydantic Settings
+│   │   ├── api/
+│   │   │   ├── routes_upload.py # POST /upload — PDF ingestion endpoint
+│   │   │   ├── routes_quiz.py   # POST /quiz  — MCQ generation endpoint
+│   │   │   └── routes_health.py # GET  /health — system status endpoint
+│   │   ├── core/
+│   │   │   ├── document_loader.py   # pymupdf4llm + pdfplumber parsing
+│   │   │   ├── text_cleaner.py      # Regex cleaning pipeline
+│   │   │   ├── chunker.py           # Header split → recursive split → enrich
+│   │   │   ├── embeddings.py        # all-mpnet-base-v2 batch encoder (GPU)
+│   │   │   ├── vector_store.py      # ChromaDB wrapper (create, add, query)
+│   │   │   ├── retriever.py         # retrieve_top_k(doc_id, query, k)
+│   │   │   └── storage.py           # File I/O helpers, doc_id management
+│   │   ├── llm/
+│   │   │   ├── ollama_client.py     # Async HTTP calls to Ollama API
+│   │   │   ├── prompts.py           # MCQ system + user prompt templates
+│   │   │   ├── quiz_generator.py    # Orchestrator: retrieve → prompt → generate → validate
+│   │   │   ├── output_parser.py     # JSON extraction from raw LLM text
+│   │   │   └── validators.py        # MCQ schema validation + error types
+│   │   ├── models/
+│   │   │   ├── request_models.py    # Pydantic: QuizRequest, UploadRequest
+│   │   │   └── response_models.py   # Pydantic: MCQQuestion, QuizResponse, etc.
+│   │   └── utils/
+│   │       ├── logger.py            # loguru setup, log format
+│   │       └── helpers.py           # Token counting, text utilities
+│   ├── data/
+│   │   ├── uploads/     # Raw PDF files saved here post-upload
+│   │   ├── extracted/   # Per-PDF Markdown files from pymupdf4llm
+│   │   ├── processed/   # Final chunk JSON files (for inspection/debug)
+│   │   └── chroma_db/   # ChromaDB persistent storage
+│   ├── tests/
+│   │   ├── test_document_pipeline.py   # Parse + clean tests
+│   │   ├── test_chunking.py            # Chunker unit tests
+│   │   ├── test_retrieval.py           # Embedding + retrieval integration test
+│   │   └── test_quiz_generation.py     # End-to-end MCQ test (mocked Ollama)
+│   ├── requirements.txt
+│   └── README.md
+├── frontend/
+│   ├── src/
+│   │   ├── api/client.js          # Axios instance + all API calls
+│   │   ├── components/
+│   │   │   ├── FileUpload.jsx     # Drag-drop PDF upload with progress
+│   │   │   ├── QuizControls.jsx   # Topic, n_questions, difficulty inputs
+│   │   │   ├── MCQCard.jsx        # Single MCQ with reveal-answer logic
+│   │   │   ├── QuizCard.jsx       # Full quiz session: score + progress
+│   │   │   └── LoadingState.jsx   # Skeleton + elapsed timer
+│   │   ├── pages/Home.jsx         # Top-level state machine
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── styles.css
+│   ├── package.json
+│   └── README.md
+├── sample_docs/
+│   ├── os_notes.pdf
+│   ├── dbms_notes.pdf
+│   └── cn_notes.pdf
+├── docs/
+│   ├── architecture.md
+│   ├── api_contract.md
+│   └── demo_script.md
+└── .gitignore
+
+
+7. API & Data Contracts
+7.1  POST /upload
+Request:  multipart/form-data, field name = file, PDF only
+// Response 200 OK
+{
+  "doc_id":   "abc123def",          // UUID-based identifier
+  "filename": "os_notes.pdf",
+  "pages":    42,
+  "chunks":   287,
+  "tokens":   {
+    "min": 34, "max": 498, "avg": 201
+  },
+  "status":   "indexed"
+}
+
+7.2  POST /quiz
+// Request body
+{
+  "doc_id":        "abc123def",
+  "topic":         "process scheduling algorithms",
+  "num_questions": 5,              // 1 to 20
+  "difficulty":    "medium"        // easy | medium | hard
+}
+
+// Response 200 OK
+{
+  "doc_id":    "abc123def",
+  "topic":     "process scheduling algorithms",
+  "questions": [
+    {
+      "id":          1,
+      "question":    "What does FCFS stand for?",
+      "options":     {
+        "A": "First Come First Served",
+        "B": "Fast CPU First Scheduling",
+        "C": "Fixed Clock Frequency Switching",
+        "D": "First Core Fetch System"
+      },
+      "correct":     "A",
+      "explanation": "FCFS schedules processes in arrival order...",
+      "source_chunks": ["os_notes.pdf:p12", "os_notes.pdf:p13"]
+    }
+  ]
+}
+
+7.3  GET /health
+// Response 200 OK
+{
+  "status":     "ok",
+  "ollama":     {"reachable": true, "model": "llama3.1:8b"},
+  "chroma":     {"connected": true, "collections": 3},
+  "embeddings": {"model_loaded": true, "device": "cuda"}
+}
+
+7.4  MCQ JSON Schema (LLM Output Contract)
+⚠  The LLM MUST return ONLY this JSON. No preamble, no explanation, no markdown fences. The validator will reject anything else and trigger a retry (max 3 attempts).
+
+{
+  "question":    "<non-empty string — the MCQ question>",
+  "options": {
+    "A": "<option text>",
+    "B": "<option text>",
+    "C": "<option text>",
+    "D": "<option text>"
+  },
+  "correct":     "<exactly one of: A | B | C | D>",
+  "explanation": "<non-empty string — why the answer is correct, citing the source>"
+}
+
+
+8. LLM Prompting Strategy
+8.1  System Prompt
+SYSTEM_PROMPT = """
+You are an expert academic quiz generator. Your task is to generate
+Multiple Choice Questions (MCQs) grounded ONLY in the provided context.
+
+STRICT RULES:
+1. Respond with ONLY a JSON object. No preamble, no explanation, no markdown.
+2. Use EXACTLY this schema:
+   {"question": str, "options": {"A":str,"B":str,"C":str,"D":str},
+    "correct": "A"|"B"|"C"|"D", "explanation": str}
+3. The correct answer MUST be explicitly supported by the context.
+4. Distractors (wrong options) must be plausible but clearly wrong to someone
+   who read the context.
+5. Explanation must cite the specific concept from the context.
+6. NEVER invent information not in the context.
+
+DIFFICULTY GUIDELINES:
+- easy:   Direct recall of a fact stated in the context
+- medium: Requires understanding a concept or process
+- hard:   Requires comparing, applying, or reasoning across concepts
+"""
+
+8.2  User Prompt Template
+USER_PROMPT_TEMPLATE = """
+CONTEXT (from document: {source_file}, sections: {sections}):
+---
+{retrieved_chunks}
+---
+
+Generate {num_questions} MCQ question(s) about the topic: "{topic}"
+Difficulty level: {difficulty}
+
+Remember: respond ONLY with valid JSON matching the required schema.
+If generating multiple questions, respond with a JSON array: [{{...}}, {{...}}]
+"""
+
+8.3  Retry Logic
+MAX_RETRIES = 3
+
+async def generate_with_retry(prompt, system_prompt, validator):
+    for attempt in range(MAX_RETRIES):
+        raw = await ollama_client.generate(prompt, system_prompt)
+        try:
+            parsed = output_parser.extract_json(raw)
+            validated = validator.validate(parsed)
+            return validated
+        except (ParseError, ValidationError) as e:
+            logger.warning(f"Attempt {attempt+1} failed: {e}")
+            if attempt == MAX_RETRIES - 1:
+                raise QuizGenerationError(f"Failed after {MAX_RETRIES} retries")
+    return None
+
+
+9. Agent Build Instructions (Step-by-Step)
+→  Follow this order exactly. Each step has a verification checkpoint before moving to the next. Do NOT skip the verification steps.
+
+STEP 0 — Environment Verification
+conda activate E:\AI\rag_env
+python -c "import sys; print(sys.executable)"  → must show E:\AI\rag_env\python.exe
+python -c "import torch; print(torch.cuda.is_available())"  → must print True
+curl http://localhost:11434/api/tags  → must show llama3.1:8b in response
+✗  If any of the above fail, fix the environment before touching application code.
+
+STEP 1 — Project Scaffold
+Create the full directory tree shown in Section 6.1 using mkdir/touch
+Create backend/requirements.txt with all packages from Section 2.2
+Create backend/app/config.py with Pydantic BaseSettings — all paths, model names, env vars
+Create backend/app/utils/logger.py with loguru setup
+Create .gitignore (exclude data/, __pycache__, .env, *.pyc, chroma_db/)
+CHECKPOINT: git init, git add ., git commit -m 'scaffold: initial project structure'
+
+STEP 2 — PDF Parsing Layer (document_loader.py + text_cleaner.py)
+Implement document_loader.py: load_pdf(path) using pymupdf4llm.to_markdown(page_chunks=True)
+Implement load_pdfs_from_dir(dir_path) and load_pdfs_from_list(paths)
+Implement pdfplumber fallback: extract_tables_fallback(pdf_path, page_num)
+Implement text_cleaner.py with all rules from Section 4.3
+Implement is_useful_page() quality gate (min 40 tokens, 40% alpha)
+CHECKPOINT: Run test_document_pipeline.py against sample_docs/ — all 3 PDFs must load with >0 useful pages
+
+STEP 3 — Chunking Layer (chunker.py + helpers.py)
+Implement helpers.py: count_tokens(text) using tiktoken cl100k_base
+Implement split_by_headers(markdown) using MarkdownHeaderTextSplitter
+Implement split_to_token_limit(chunks, max=512, overlap=50) using RecursiveCharacterTextSplitter
+Implement build_final_chunks(chunks, source, page_num) with breadcrumb injection
+Implement full pipeline function: chunk_pdf(pdf_path) → list[ChunkDict]
+CHECKPOINT: Run test_chunking.py — assert all chunks 30≤tokens≤512, metadata keys present, breadcrumbs populated
+
+STEP 4 — Embeddings Layer (embeddings.py)
+Load all-mpnet-base-v2 from HF_HOME cache via sentence_transformers.SentenceTransformer
+Detect device: 'cuda' if torch.cuda.is_available() else 'cpu'
+Implement embed_chunks(chunks: list[dict]) → adds 'embedding' key (list[float]) to each chunk dict
+Implement embed_query(text: str) → list[float]
+Use batch_size=32, normalize_embeddings=True (unit norm for cosine similarity)
+CHECKPOINT: Embed 10 test chunks, verify each embedding has 768 dimensions, L2 norm ≈ 1.0
+
+STEP 5 — Vector Store Layer (vector_store.py)
+Initialize chromadb.PersistentClient(path=CHROMA_PATH from config)
+Implement create_or_get_collection(doc_id: str) using cosine distance metric
+Implement add_chunks(collection, chunks) — stores embedding + text + all metadata fields
+Implement query(collection, query_embedding, k=5) → list[dict] with text + metadata
+Implement delete_collection(doc_id) for cleanup
+CHECKPOINT: Add 50 test chunks, query with a known topic, assert top-1 result contains relevant content
+
+STEP 6 — Retriever (retriever.py)
+Implement retrieve_top_k(doc_id: str, query_text: str, k: int = 5) → list[dict]
+Internally: embed_query(query_text) → vector_store.query(collection, embedding, k)
+Each returned dict must include: text, source, page_num, section, subsection, chunk_id
+CHECKPOINT: Run test_retrieval.py — index os_notes.pdf, query 'round robin scheduling', assert top result contains scheduling content
+
+STEP 7 — LLM Layer (ollama_client.py, prompts.py, output_parser.py, validators.py, quiz_generator.py)
+ollama_client.py: async POST to OLLAMA_HOST/api/generate with model, prompt, stream=false, timeout=120s
+prompts.py: implement build_prompt(topic, chunks, num_questions, difficulty) using templates from Section 8
+output_parser.py: extract_json(raw_text) — strip ```json fences, find first { or [, json.loads()
+validators.py: validate_mcq(parsed) — check 4 options, correct in {A,B,C,D}, non-empty question/explanation
+quiz_generator.py: generate_quiz(doc_id, topic, num_q, difficulty) with retry loop (Section 8.3)
+CHECKPOINT: With Ollama running, call generate_quiz() on an indexed PDF — must return valid MCQ JSON list
+
+STEP 8 — FastAPI Backend (main.py + routes)
+main.py: FastAPI(), CORSMiddleware (allow http://localhost:5173), include all 3 routers
+routes_upload.py: receive PDF, save to data/uploads/, call chunk_pdf() → embed_chunks() → add_chunks(), return UploadResponse
+routes_quiz.py: validate QuizRequest, call generate_quiz(), return QuizResponse
+routes_health.py: check Ollama reachable, Chroma connected, embedding model loaded
+Run: uvicorn app.main:app --reload --port 8000
+CHECKPOINT: Open http://localhost:8000/docs — all 3 endpoints visible and testable. Upload a PDF via Swagger UI, then generate quiz.
+
+STEP 9 — React Frontend
+api/client.js: axios instance with baseURL=http://localhost:8000, upload and quiz helper functions
+FileUpload.jsx: drag-drop zone, PDF-only filter, progress bar, call uploadPDF(), store doc_id in state
+QuizControls.jsx: topic text input, num_questions slider (1-20), difficulty dropdown (easy/medium/hard), disabled until doc_id exists
+MCQCard.jsx: question text, 4 option buttons (A-D), click to select, 'Show Answer' button, reveal correct+explanation
+LoadingState.jsx: skeleton card placeholders + elapsed time counter (local LLM can take 10-30s per question)
+Home.jsx: state machine — IDLE → UPLOADING → READY → GENERATING → QUIZ_DISPLAY → IDLE
+CHECKPOINT: Full end-to-end in browser — upload PDF, set topic, generate 3 questions, answer them all
+
+STEP 10 — Tests
+test_document_pipeline.py: test single PDF + batch dir, assert useful pages > 0, check cleaning output
+test_chunking.py: assert 30 ≤ all chunk token counts ≤ 512, metadata keys present, breadcrumbs non-empty
+test_retrieval.py: index os_notes.pdf, query known topic, assert semantic relevance in top-3 results
+test_quiz_generation.py: mock Ollama HTTP call, test valid JSON path + retry on bad JSON + retry exhaustion error
+CHECKPOINT: pytest tests/ — all tests green
+
+
+10. Success Criteria (Definition of Done)
+
+
+11. Out of Scope (v1.0)
+Cloud LLMs (OpenAI, Anthropic, Gemini) — local only
+Google Forms auto-generation — planned for v2
+User authentication / accounts
+Multi-user or concurrent PDF sessions
+Short-answer or true/false question types — MCQ only
+Semantic chunking (LLM-based sentence similarity splitting) — v2 upgrade
+Mobile-responsive frontend — desktop first
+OCR for scanned/image-based PDFs — text-layer PDFs only in v1
+Evaluation framework for MCQ quality scoring
+
+
+12. Git & Team Workflow
+12.1  Branch Strategy
+
+⚠  git config --global user.email must match your GitHub account email EXACTLY or contributions won't appear on your profile.
+
+12.2  Commit Message Convention
+feat: add pymupdf4llm parsing pipeline
+fix: handle empty page text in quality gate
+refactor: extract token counting to helpers.py
+test: add chunking unit tests
+docs: update api_contract.md with /quiz schema
+chore: add requirements.txt and .gitignore
+
+
+— End of PRD v1.0 — Offline RAG Quiz Generator —

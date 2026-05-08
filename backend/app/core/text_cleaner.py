@@ -7,7 +7,7 @@ contextual integrity. Each cleaning step is a separate private
 method that can be individually toggled or reordered.
 
 Cleaning Pipeline (applied in order):
-    1. Fix broken hyphenation    — "algo-\\nrithm" → "algorithm"
+    1. Fix broken hyphenation    - "algo-\\nrithm" -> "algorithm"
     2. Remove control characters — Strip \\x00-\\x1f except \\n, \\t
     3. Detect & strip repeating headers/footers across pages
     4. Strip standalone page numbers
@@ -161,7 +161,7 @@ class TextCleaner:
         logger.info(
             f"[bold]Cleaning complete[/bold]: "
             f"{len(cleaned_docs)}/{len(documents)} pages retained, "
-            f"{total_chars_before:,} → {total_chars_after:,} chars "
+            f"{total_chars_before:,} -> {total_chars_after:,} chars "
             f"({reduction:.1f}% noise removed)"
         )
 
@@ -199,7 +199,7 @@ class TextCleaner:
         """
         Fix words broken across line endings by a hyphen.
 
-        Pattern: 'algo-\\nrithm' → 'algorithm'
+        Pattern: 'algo-\\nrithm' -> 'algorithm'
 
         The regex matches:
             - A word character before the hyphen (to avoid list items)
@@ -289,7 +289,7 @@ class TextCleaner:
                 f"  Detected {len(repeating)} repeating header/footer pattern(s)"
             )
             for line in list(repeating)[:5]:  # Show first 5
-                logger.debug(f"    → '{line[:60]}...'")
+                logger.debug(f"    -> '{line[:60]}...'")
 
         return repeating
 
@@ -354,10 +354,10 @@ class TextCleaner:
         # Strip trailing spaces per line
         text = re.sub(r"[ \t]+$", "", text, flags=re.MULTILINE)
 
-        # Collapse 3+ newlines → 2 (keep paragraph breaks)
+        # Collapse 3+ newlines -> 2 (keep paragraph breaks)
         text = re.sub(r"\n{3,}", "\n\n", text)
 
-        # Collapse multiple spaces → single space (within lines)
+        # Collapse multiple spaces -> single space (within lines)
         text = re.sub(r" {2,}", " ", text)
 
         return text.strip()

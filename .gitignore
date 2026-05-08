@@ -6,3 +6,7 @@ venv/
 .venv/
 backend/venv/
 .env
+backend/rag_env/
+backend/data/
+.ipynb_checkpoints/
+anaconda_projects/

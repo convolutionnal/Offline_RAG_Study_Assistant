@@ -39,7 +39,7 @@ DEFAULT_LOG_LEVEL: int = logging.INFO
 
 # Log format for the fallback plain handler (no Rich).
 PLAIN_FORMAT: str = (
-    "%(asctime)s │ %(levelname)-8s │ %(name)-30s │ %(message)s"
+    "%(asctime)s | %(levelname)-8s | %(name)-30s | %(message)s"
 )
 PLAIN_DATE_FORMAT: str = "%Y-%m-%d %H:%M:%S"
 
